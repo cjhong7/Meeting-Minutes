@@ -1,0 +1,27 @@
+{
+  "name": "학교 협의록 작성기",
+  "short_name": "협의록",
+  "description": "AI 기반 학교 협의록 자동 생성 도구. 녹음·계획서·타자·펜 4가지 입력 모드 지원.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f4f7fb",
+  "theme_color": "#245db5",
+  "lang": "ko",
+  "icons": [
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "categories": ["education", "productivity"],
+  "prefer_related_applications": false
+}

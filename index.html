@@ -1,0 +1,660 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#245db5">
+  <title>학교 협의록 작성기</title>
+  <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
+  <link rel="apple-touch-icon" href="icons/icon.svg">
+  <link rel="stylesheet" href="styles/main.css">
+  <link rel="stylesheet" href="styles/print.css" media="print">
+  <link rel="manifest" href="manifest.webmanifest">
+</head>
+<body>
+
+  <!-- ===================== 앱 헤더 ===================== -->
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="app-brand">
+        <span class="app-icon" aria-hidden="true">📋</span>
+        <h1 class="app-title">학교 협의록 작성기</h1>
+      </div>
+      <button class="btn-icon" id="btnAiSettings" title="AI 엔진 설정" aria-label="AI 엔진 설정">
+        <span aria-hidden="true">⚙</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ===================== 도구바 ===================== -->
+  <nav class="toolbar" role="toolbar" aria-label="주요 기능">
+    <div class="toolbar-inner">
+      <button class="btn btn-ghost" id="btnNew" type="button">
+        <span aria-hidden="true">＋</span> 새로작성
+      </button>
+      <button class="btn btn-ghost" id="btnSave" type="button" disabled>
+        <span aria-hidden="true">💾</span> 내 기기에 저장
+      </button>
+      <button class="btn btn-ghost" id="btnArchive" type="button">
+        <span aria-hidden="true">📂</span> 보관함
+      </button>
+      <button class="btn btn-accent" id="btnExcel" type="button" disabled>
+        <span aria-hidden="true">📊</span> 엑셀 다운로드
+      </button>
+    </div>
+  </nav>
+
+  <!-- ===================== 탭 전환 (태블릿용) ===================== -->
+  <div class="tab-switcher" id="tabSwitcher">
+    <button class="tab-btn tab-active" data-panel="panelInput" type="button">1쪽 입력</button>
+    <button class="tab-btn" data-panel="panelPreview" type="button">2쪽 미리보기</button>
+  </div>
+
+  <!-- ===================== 메인 레이아웃 ===================== -->
+  <main class="layout" id="mainLayout">
+
+    <!-- ─────────── 1쪽: 입력 패널 ─────────── -->
+    <section class="panel input-panel" id="panelInput" aria-label="회의 내용 입력">
+
+      <!-- ▣ 회의 정보 -->
+      <div class="sec" id="secMeta">
+        <h2 class="sec-title">회의 정보</h2>
+        <div class="form-col">
+          <div class="form-field">
+            <label class="field-label" for="inTitle">회의명</label>
+            <input class="field-input" id="inTitle" type="text"
+              placeholder="교육과정 협의회" autocomplete="off">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label class="field-label" for="inDate">날짜</label>
+            <input class="field-input" id="inDate" type="date">
+          </div>
+          <div class="form-field field-narrow">
+            <label class="field-label" for="inTime">시작 시간</label>
+            <input class="field-input" id="inTime" type="time">
+          </div>
+          <div class="form-field">
+            <label class="field-label" for="inPlace">장소</label>
+            <input class="field-input" id="inPlace" type="text"
+              placeholder="교무실" autocomplete="off">
+          </div>
+        </div>
+      </div>
+
+      <!-- ▣ 안건 -->
+      <div class="sec" id="secAgenda">
+        <div class="sec-header">
+          <h2 class="sec-title">안건</h2>
+          <button class="btn btn-sm btn-ghost" id="btnAddAgenda" type="button">
+            ＋ 안건 추가
+          </button>
+        </div>
+        <ul class="agenda-list" id="agendaList" aria-label="안건 목록">
+          <!-- JS로 동적 렌더링 -->
+        </ul>
+      </div>
+
+      <!-- ▣ 참석자 -->
+      <div class="sec" id="secAttendees">
+        <div class="sec-header">
+          <h2 class="sec-title">참석자</h2>
+          <div class="count-control" role="group" aria-label="참석자 수 조절">
+            <button class="count-btn" id="btnAttDec" type="button" aria-label="줄이기">−</button>
+            <span class="count-label" id="attCountLabel">6명</span>
+            <span class="count-limit">/ 16</span>
+            <button class="count-btn" id="btnAttInc" type="button" aria-label="늘리기">＋</button>
+          </div>
+        </div>
+        <div class="attendee-input-grid" id="attendeeInputGrid">
+          <!-- JS로 동적 렌더링 -->
+        </div>
+        <p class="hint-text" id="attHint"></p>
+      </div>
+
+      <!-- ▣ 작성 방식 -->
+      <div class="sec" id="secMode">
+        <h2 class="sec-title">작성 방식</h2>
+        <div class="mode-selector" role="radiogroup" aria-label="작성 방식">
+          <label class="mode-option">
+            <input class="mode-radio" type="radio" name="inputMode" value="voice">
+            <span class="mode-chip">
+              <span class="mode-emoji" aria-hidden="true">🎤</span>
+              <span>녹음</span>
+            </span>
+          </label>
+          <label class="mode-option">
+            <input class="mode-radio" type="radio" name="inputMode" value="plan">
+            <span class="mode-chip">
+              <span class="mode-emoji" aria-hidden="true">📄</span>
+              <span>계획서</span>
+            </span>
+          </label>
+          <label class="mode-option">
+            <input class="mode-radio" type="radio" name="inputMode" value="typing" checked>
+            <span class="mode-chip">
+              <span class="mode-emoji" aria-hidden="true">⌨</span>
+              <span>타자</span>
+            </span>
+          </label>
+          <label class="mode-option">
+            <input class="mode-radio" type="radio" name="inputMode" value="pen">
+            <span class="mode-chip">
+              <span class="mode-emoji" aria-hidden="true">✏</span>
+              <span>펜</span>
+            </span>
+          </label>
+        </div>
+
+        <!-- 모드별 UI 패널 -->
+
+        <!-- 녹음 모드 -->
+        <div class="mode-pane" id="paneVoice" hidden>
+          <!-- 탭: 실시간 녹음 / 파일 첨부 -->
+          <div class="voice-tabs">
+            <button class="voice-tab voice-tab-active" id="tabLiveRec" type="button">🎤 실시간 녹음</button>
+            <button class="voice-tab" id="tabFileAttach" type="button">📎 파일 첨부</button>
+          </div>
+
+          <!-- 실시간 녹음 패널 -->
+          <div class="voice-panel" id="paneLiveRec">
+            <div class="mic-status" id="micStatus">마이크 연결을 확인하세요</div>
+            <div class="audio-level-bar" id="audioLevelBar"><div class="audio-level-fill" id="audioLevelFill"></div></div>
+            <div class="rec-timer" id="recTimer" hidden>● 녹음 중 <span id="recTime">00:00:00</span></div>
+            <div class="rec-controls">
+              <button class="btn btn-primary" id="btnStartRec" type="button" disabled>녹음 시작</button>
+              <button class="btn btn-danger" id="btnStopRec" type="button" hidden>녹음 정지</button>
+            </div>
+            <p class="hint-text" id="voiceSttHint">녹음 중 브라우저 음성인식으로 실시간 텍스트가 표시됩니다.</p>
+          </div>
+
+          <!-- 파일 첨부 패널 -->
+          <div class="voice-panel" id="paneFileAttach" hidden>
+            <div class="file-drop-zone" id="voiceDropZone">
+              <p>오디오 파일을 여기에 끌어다 놓거나 클릭하세요</p>
+              <p class="hint-text">MP3, M4A, WAV, WebM, OGG 지원</p>
+              <input type="file" id="voiceFileInput" accept="audio/*,.mp3,.m4a,.wav,.webm,.ogg" hidden>
+            </div>
+            <div class="attached-file-info" id="attachedFileInfo" hidden>
+              <span id="attachedFileName"></span>
+              <span id="attachedFileMeta"></span>
+              <button class="btn btn-xs btn-ghost" id="btnRemoveAttached" type="button">제거</button>
+            </div>
+            <p class="hint-text">Whisper STT로 변환합니다. API 키가 필요합니다.</p>
+          </div>
+
+          <!-- STT 결과 (공통) -->
+          <div class="voice-transcript-area" id="voiceTranscriptArea" hidden>
+            <label class="field-label">변환된 텍스트 <small>(편집 가능)</small></label>
+            <textarea class="typing-area voice-transcript" id="voiceTranscript" placeholder="음성 인식 결과가 여기에 표시됩니다…"></textarea>
+            <div class="typing-footer">
+              <span class="char-count" id="voiceCharCount">0자</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 계획서 모드 -->
+        <div class="mode-pane" id="panePlan" hidden>
+          <div class="file-drop-zone" id="planDropZone">
+            <p>계획서 파일을 여기에 끌어다 놓거나 클릭하세요</p>
+            <p class="hint-text">HWPX, PDF, DOCX 지원 (여러 파일 가능)</p>
+            <input type="file" id="planFileInput" accept=".hwpx,.pdf,.docx" multiple hidden>
+          </div>
+          <div class="plan-file-list" id="planFileList" hidden></div>
+          <div class="plan-extract-area" id="planExtractArea" hidden>
+            <label class="field-label">추출된 텍스트 <small>(편집 가능)</small></label>
+            <textarea class="typing-area plan-textarea" id="planExtractText" placeholder="파일에서 추출된 텍스트가 여기에 표시됩니다…"></textarea>
+            <div class="typing-footer">
+              <span class="char-count" id="planCharCount">0자</span>
+            </div>
+          </div>
+          <div class="plan-paste-area">
+            <details class="cost-guide">
+              <summary class="cost-guide-title">파일 업로드가 안 되나요?</summary>
+              <p class="hint-text">한글(HWP)에서 텍스트를 복사하여 위 텍스트 영역에 직접 붙여넣을 수도 있습니다.</p>
+            </details>
+          </div>
+        </div>
+
+        <!-- 타자 모드 (MVP 핵심) -->
+        <div class="mode-pane" id="paneTyping">
+          <div class="typing-toolbar">
+            <button class="btn btn-xs btn-ghost" id="btnTagAgenda" type="button"
+              title="[협의안건] 태그 삽입">[협의안건]</button>
+            <button class="btn btn-xs btn-ghost" id="btnTagNotice" type="button"
+              title="[전달사항] 태그 삽입">[전달사항]</button>
+            <button class="btn btn-xs btn-ghost" id="btnDictate" type="button"
+              title="음성 받아쓰기 (브라우저 음성인식)">
+              <span aria-hidden="true">🎤</span> 받아쓰기
+            </button>
+          </div>
+          <textarea
+            class="typing-area"
+            id="typingText"
+            placeholder="회의 내용을 자유롭게 입력하세요.
+
+예) 중간에 [협의안건] / [전달사항] 태그를 넣으면
+  AI가 결정·논의 사항과 전달 사항을 자동으로 구분합니다.
+  태그 없이 입력해도 괜찮습니다."
+            autocomplete="off"
+            spellcheck="true"
+          ></textarea>
+          <div class="typing-footer">
+            <span class="char-count" id="typingCharCount">0자</span>
+            <span class="autosave-status" id="typingAutoSave"></span>
+          </div>
+        </div>
+
+        <!-- 펜 모드 -->
+        <div class="mode-pane" id="panePen" hidden>
+          <div class="pen-toolbar">
+            <button class="btn btn-xs pen-tool pen-tool-active" id="btnPenDraw" type="button" title="펜">✏ 펜</button>
+            <button class="btn btn-xs pen-tool" id="btnPenErase" type="button" title="지우개">🧽 지우개</button>
+            <label class="pen-size-label">
+              굵기 <input type="range" id="penSize" min="1" max="12" value="3" class="pen-size-slider">
+            </label>
+            <input type="color" id="penColor" value="#1e2633" title="색상" class="pen-color-input">
+            <button class="btn btn-xs btn-ghost" id="btnPenUndo" type="button" title="실행 취소">↩</button>
+            <button class="btn btn-xs btn-ghost" id="btnPenRedo" type="button" title="다시 실행">↪</button>
+            <button class="btn btn-xs btn-ghost" id="btnPenClear" type="button" title="전체 지우기">🗑</button>
+          </div>
+          <div class="pen-canvas-wrap" id="penCanvasWrap">
+            <canvas id="penCanvas"></canvas>
+          </div>
+          <div class="pen-actions">
+            <button class="btn btn-sm btn-primary" id="btnPenExtract" type="button">텍스트 추출 (OCR)</button>
+            <label class="toggle-label pen-palm-toggle">
+              <input type="checkbox" id="chkPalmReject"> 손바닥 오터치 방지 (펜만 인식)
+            </label>
+          </div>
+          <div class="pen-ocr-area" id="penOcrArea" hidden>
+            <label class="field-label">추출된 텍스트 <small>(편집 가능 · OCR 결과는 정확하지 않을 수 있습니다)</small></label>
+            <textarea class="typing-area pen-textarea" id="penOcrText" placeholder="OCR 결과가 여기에 표시됩니다…"></textarea>
+            <div class="typing-footer">
+              <span class="char-count" id="penCharCount">0자</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 협의록 생성 버튼 -->
+      <div class="sec sec-generate">
+        <button class="btn btn-primary btn-full" id="btnGenerate" type="button">
+          협의록 생성 →
+        </button>
+        <p class="generate-hint" id="generateHint"></p>
+      </div>
+
+    </section><!-- #panelInput -->
+
+    <!-- ─────────── 2쪽: 미리보기 패널 ─────────── -->
+    <aside class="panel preview-panel" id="panelPreview" aria-label="협의록 미리보기">
+      <div class="preview-scroll">
+
+        <!-- 협의록 종이 -->
+        <div class="paper" id="paper">
+
+          <!-- 제목 행 -->
+          <div class="paper-title" id="paperTitle">학교 협의록</div>
+
+          <!-- 메타 정보 테이블 -->
+          <table class="meta-table" id="metaTable">
+            <colgroup>
+              <col class="col-th">
+              <col class="col-td">
+              <col class="col-th">
+              <col class="col-td">
+            </colgroup>
+            <tbody>
+              <tr>
+                <th class="meta-th">회의명</th>
+                <td class="meta-td" colspan="3" id="pvTitle">
+                  <span class="pv-placeholder">회의명을 입력하세요</span>
+                </td>
+              </tr>
+              <tr>
+                <th class="meta-th">일&nbsp;&nbsp;시</th>
+                <td class="meta-td" id="pvDate">
+                  <span class="pv-placeholder">날짜를 선택하세요</span>
+                </td>
+                <th class="meta-th">장&nbsp;&nbsp;소</th>
+                <td class="meta-td" id="pvPlace">
+                  <span class="pv-placeholder">장소를 입력하세요</span>
+                </td>
+              </tr>
+              <tr>
+                <th class="meta-th">참석자</th>
+                <td class="meta-td td-attendees" colspan="3" id="pvAttendees">
+                  <div class="att-preview" id="attPreview">
+                    <!-- JS로 동적 렌더링 -->
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <th class="meta-th">안&nbsp;&nbsp;건</th>
+                <td class="meta-td" colspan="3" id="pvAgendas">
+                  <span class="pv-placeholder">안건을 입력하세요</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <!-- 협의록 본문 영역 -->
+          <div class="minutes-body" id="minutesBody">
+            <div class="minutes-placeholder" id="minutesPlaceholder">
+              <p>협의록이 여기에 표시됩니다.</p>
+              <p class="placeholder-sub">회의 내용을 입력 후 <strong>협의록 생성 →</strong> 버튼을 누르세요.</p>
+            </div>
+            <pre class="minutes-content" id="minutesContent" hidden></pre>
+          </div>
+
+        </div><!-- .paper -->
+
+        <!-- 미리보기 하단 액션 -->
+        <div class="preview-bar">
+          <button class="btn btn-ghost" id="btnPrint" type="button">
+            <span aria-hidden="true">🖨</span> 인쇄
+          </button>
+        </div>
+
+      </div><!-- .preview-scroll -->
+    </aside><!-- #panelPreview -->
+
+  </main><!-- .layout -->
+
+
+  <!-- ===================== MODALS ===================== -->
+
+  <!-- 면책 고지 (최초 1회) -->
+  <div class="modal-overlay" id="modalDisclaimer" role="dialog"
+    aria-modal="true" aria-labelledby="dlgDisclaimerTitle">
+    <div class="modal-box">
+      <div class="modal-body">
+        <h2 class="modal-title" id="dlgDisclaimerTitle">📋 이용 안내 및 동의</h2>
+        <p>본 도구는 교사 개인이 무료로 제공하는 서비스입니다. 아래 사항을 확인 후 이용해 주세요.</p>
+        <ul class="disclaimer-list">
+          <li>회의 녹음·문서·필기 등 원본 데이터는 <strong>사용자 기기에만</strong> 저장됩니다.</li>
+          <li>AI 협의록 생성 시에만 입력 내용이 OpenAI·Gemini·Claude 서버로 전송됩니다.</li>
+          <li>데이터 손실, API 키 유출, AI 생성 오류에 대해 개발자(교사)는 책임지지 않습니다.</li>
+          <li>학생 개인정보 입력에 주의해 주세요.</li>
+          <li>녹음 전 반드시 참석자 동의를 받으세요.</li>
+        </ul>
+        <button class="btn btn-primary btn-full" id="btnAcceptDisclaimer" type="button">
+          확인하고 시작하기
+        </button>
+        <p class="disclaimer-footer">
+          언제든지 <button class="link-btn" id="btnShowDisclaimer" type="button">이용 안내 다시 보기</button>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI 엔진 설정 -->
+  <div class="modal-overlay" id="modalAiSettings" hidden
+    role="dialog" aria-modal="true" aria-labelledby="dlgAiTitle">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h2 class="modal-title" id="dlgAiTitle">⚙ AI 엔진 설정</h2>
+        <button class="btn-icon modal-close" data-close="modalAiSettings"
+          type="button" aria-label="닫기">✕</button>
+      </div>
+      <div class="modal-body">
+
+        <!-- 엔진 선택 -->
+        <div class="form-field">
+          <span class="field-label">사용할 엔진</span>
+          <div class="engine-list" role="radiogroup" aria-label="AI 엔진 선택">
+
+            <label class="engine-option">
+              <input class="engine-radio" type="radio" name="aiEngine" value="openai">
+              <span class="engine-info">
+                <span class="engine-name">GPT-4o <small>(OpenAI)</small></span>
+                <span class="engine-desc">최고 품질 · Whisper STT 지원 · 분당 약 8원</span>
+              </span>
+            </label>
+
+            <label class="engine-option">
+              <input class="engine-radio" type="radio" name="aiEngine" value="gemini">
+              <span class="engine-info">
+                <span class="engine-name">Gemini <small>(Google)</small></span>
+                <span class="engine-desc">높은 품질 · 오디오 직접 입력</span>
+              </span>
+            </label>
+
+            <label class="engine-option">
+              <input class="engine-radio" type="radio" name="aiEngine" value="claude">
+              <span class="engine-info">
+                <span class="engine-name">Claude <small>(Anthropic)</small></span>
+                <span class="engine-desc">높은 품질 · 녹음 STT는 브라우저 음성인식 대체</span>
+              </span>
+            </label>
+
+            <label class="engine-option">
+              <input class="engine-radio" type="radio" name="aiEngine" value="sim" checked>
+              <span class="engine-info">
+                <span class="engine-name">키 없음 <small>(로컬 시뮬레이션)</small></span>
+                <span class="engine-desc">무료 · 오프라인 가능 · AI 없이 양식 정리만</span>
+              </span>
+            </label>
+
+          </div>
+        </div>
+
+        <!-- OpenAI 키 -->
+        <div class="form-field engine-key-field" id="fieldOpenaiKey" hidden>
+          <label class="field-label" for="inOpenaiKey">
+            OpenAI API Key <small class="key-hint">(sk-...)</small>
+          </label>
+          <div class="key-row">
+            <input class="field-input" id="inOpenaiKey" type="password"
+              placeholder="sk-..." autocomplete="off">
+            <button class="btn btn-sm btn-ghost" id="btnShowOpenaiKey" type="button">보기</button>
+          </div>
+        </div>
+
+        <!-- Gemini 키 -->
+        <div class="form-field engine-key-field" id="fieldGeminiKey" hidden>
+          <label class="field-label" for="inGeminiKey">
+            Gemini API Key <small class="key-hint">(AIzaSy...)</small>
+          </label>
+          <div class="key-row">
+            <input class="field-input" id="inGeminiKey" type="password"
+              placeholder="AIzaSy..." autocomplete="off">
+            <button class="btn btn-sm btn-ghost" id="btnShowGeminiKey" type="button">보기</button>
+          </div>
+        </div>
+
+        <!-- Claude 키 -->
+        <div class="form-field engine-key-field" id="fieldClaudeKey" hidden>
+          <label class="field-label" for="inClaudeKey">
+            Claude API Key <small class="key-hint">(sk-ant-...)</small>
+          </label>
+          <div class="key-row">
+            <input class="field-input" id="inClaudeKey" type="password"
+              placeholder="sk-ant-..." autocomplete="off">
+            <button class="btn btn-sm btn-ghost" id="btnShowClaudeKey" type="button">보기</button>
+          </div>
+        </div>
+
+        <!-- PIN -->
+        <div class="form-field" id="fieldPin" hidden>
+          <label class="field-label" for="inPin">
+            키 잠금 PIN <small class="key-hint">(선택 · 공용 PC 권장)</small>
+          </label>
+          <input class="field-input" id="inPin" type="password"
+            placeholder="숫자 4~8자리" maxlength="8" autocomplete="off">
+          <p class="hint-text">설정 시 페이지를 열 때마다 PIN을 입력해야 키를 사용할 수 있습니다.
+            PIN을 잊으면 키를 다시 입력해야 합니다.</p>
+        </div>
+
+        <!-- 고품질 토글 -->
+        <div class="form-field" id="fieldQuality">
+          <label class="toggle-label">
+            <input type="checkbox" id="chkHighQuality">
+            <span>고품질 모델 사용 (비용 약 5~10배 증가)</span>
+          </label>
+          <p class="hint-text" id="qualityHint">저가형: gpt-4o-mini / gemini-flash / claude-haiku</p>
+        </div>
+
+        <!-- 사용량 표시 -->
+        <div class="usage-box" id="usageBox">
+          <span class="usage-label">이번 달 추정 비용</span>
+          <span class="usage-amount" id="usageAmount">0원</span>
+          <span class="usage-note">(이 기기 기준 · 실제 청구는 AI사 대시보드 확인)</span>
+        </div>
+
+        <!-- 비용 절감 가이드 -->
+        <details class="cost-guide">
+          <summary class="cost-guide-title">💡 비용 절감 가이드</summary>
+          <ul class="cost-guide-list">
+            <li>짧은 회의 + 타자 + 저가형 → 회의당 약 8~30원</li>
+            <li>60분 녹음 → 약 490원 (STT 비용이 대부분)</li>
+            <li>완전 무료 → 키 없음 모드 (양식 정리만)</li>
+          </ul>
+        </details>
+
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" id="btnSaveAiSettings" type="button">설정 저장</button>
+        <button class="btn btn-ghost" data-close="modalAiSettings" type="button">취소</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 비용 확인 모달 (협의록 생성 직전) -->
+  <div class="modal-overlay" id="modalCostConfirm" hidden
+    role="dialog" aria-modal="true" aria-labelledby="dlgCostTitle">
+    <div class="modal-box modal-sm">
+      <div class="modal-header">
+        <h2 class="modal-title" id="dlgCostTitle">협의록 생성</h2>
+      </div>
+      <div class="modal-body">
+        <p id="costEngineMsg"></p>
+        <p class="cost-estimate" id="costEstimateMsg"></p>
+        <p class="transfer-warn" id="transferWarnMsg"></p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" id="btnConfirmGenerate" type="button">생성하기</button>
+        <button class="btn btn-ghost" data-close="modalCostConfirm" type="button">취소</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 보관함 모달 -->
+  <div class="modal-overlay" id="modalArchive" hidden
+    role="dialog" aria-modal="true" aria-labelledby="dlgArchiveTitle">
+    <div class="modal-box modal-lg">
+      <div class="modal-header">
+        <h2 class="modal-title" id="dlgArchiveTitle">📂 보관함</h2>
+        <button class="btn-icon modal-close" data-close="modalArchive"
+          type="button" aria-label="닫기">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="archive-search-bar">
+          <input class="field-input" id="archiveSearch" type="search"
+            placeholder="회의명, 안건, 일시로 검색…" autocomplete="off">
+        </div>
+        <div class="archive-list" id="archiveList">
+          <p class="empty-state">저장된 회의록이 없습니다.<br>
+            <small>협의록 생성 후 '내 기기에 저장'을 눌러보세요.</small>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 저장 위치 선택 모달 -->
+  <div class="modal-overlay" id="modalSaveLocation" hidden
+    role="dialog" aria-modal="true" aria-labelledby="dlgSaveTitle">
+    <div class="modal-box modal-sm">
+      <div class="modal-header">
+        <h2 class="modal-title" id="dlgSaveTitle">💾 저장 위치 선택</h2>
+        <button class="btn-icon modal-close" data-close="modalSaveLocation"
+          type="button" aria-label="닫기">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="save-options">
+          <button class="save-option" id="btnSaveLocal" type="button">
+            <span class="save-option-icon" aria-hidden="true">💾</span>
+            <span class="save-option-text">
+              <strong>내 컴퓨터 폴더</strong>
+              <small>파일 선택기로 저장 위치 직접 지정</small>
+            </span>
+          </button>
+          <button class="save-option" id="btnSaveDrive" type="button">
+            <span class="save-option-icon" aria-hidden="true">🟢</span>
+            <span class="save-option-text">
+              <strong>Google Drive 동기화 폴더</strong>
+              <small>PC의 Drive 폴더에 저장 → 자동 클라우드 업로드</small>
+            </span>
+          </button>
+          <button class="save-option" id="btnSaveOneDrive" type="button">
+            <span class="save-option-icon" aria-hidden="true">🔵</span>
+            <span class="save-option-text">
+              <strong>OneDrive 동기화 폴더</strong>
+              <small>PC의 OneDrive 폴더에 저장 → 자동 클라우드 업로드</small>
+            </span>
+          </button>
+        </div>
+        <p class="hint-text">※ 클라우드 저장은 PC에 설치된 동기화 앱 폴더에 저장합니다. 별도 로그인 불필요.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 범용 확인 모달 -->
+  <div class="modal-overlay" id="modalConfirm" hidden
+    role="dialog" aria-modal="true">
+    <div class="modal-box modal-sm">
+      <div class="modal-body">
+        <p class="confirm-msg" id="confirmMsg"></p>
+        <div class="modal-footer">
+          <button class="btn btn-danger" id="btnConfirmYes" type="button">확인</button>
+          <button class="btn btn-ghost" id="btnConfirmNo" type="button">취소</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== 토스트 ===================== -->
+  <div class="toast-area" id="toastArea" aria-live="polite" aria-atomic="false"></div>
+
+  <!-- ===================== 앱 스크립트 ===================== -->
+  <script type="module" src="src/main.js"></script>
+
+  <!-- PWA 서비스 워커 등록 + 오프라인 감지 -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./service-worker.js')
+        .then(reg => {
+          // 새 버전 감지 시 자동 업데이트
+          reg.addEventListener('updatefound', () => {
+            const newSW = reg.installing;
+            newSW.addEventListener('statechange', () => {
+              if (newSW.state === 'activated' && navigator.serviceWorker.controller) {
+                // 토스트 대신 조용히 로그 (다음 새로고침에 적용)
+                console.log('[PWA] 새 버전이 설치되었습니다.');
+              }
+            });
+          });
+        })
+        .catch(err => console.warn('[PWA] SW 등록 실패:', err));
+    }
+
+    // 오프라인/온라인 감지
+    window.addEventListener('offline', () => {
+      document.body.classList.add('is-offline');
+      const t = document.createElement('div');
+      t.className = 'offline-banner';
+      t.id = 'offlineBanner';
+      t.textContent = '오프라인 상태입니다. AI 기능은 인터넷 연결이 필요합니다.';
+      if (!document.getElementById('offlineBanner')) document.body.prepend(t);
+    });
+    window.addEventListener('online', () => {
+      document.body.classList.remove('is-offline');
+      document.getElementById('offlineBanner')?.remove();
+    });
+  </script>
+
+</body>
+</html>

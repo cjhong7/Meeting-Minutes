@@ -1,0 +1,252 @@
+/* ============================================================
+   학교 협의록 작성기 — 인쇄 전용 CSS
+   (media="print" 로 로드, @media print 불필요)
+
+   계획서 Ⅷ-4:
+    - 좌측 입력 패널 숨김, 2쪽 미리보기만
+    - A4 세로, 여백 최소화 (가로 폭 최대 활용)
+    - 표 행 분리 방지 page-break-inside:avoid
+    - 상단 양식(회의명·일시·참석자)은 첫 쪽에만
+    - 맑은 고딕
+   ============================================================ */
+
+/* ── 숨길 UI 요소 ── */
+.app-header,
+.toolbar,
+.tab-switcher,
+.input-panel,
+.preview-bar,
+.toast-area,
+.modal-overlay,
+.generating-overlay,
+.sec-generate,
+.generate-hint {
+  display: none !important;
+}
+
+/* ── 레이아웃 초기화 ── */
+body {
+  background: #fff !important;
+  color: #000 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+}
+
+.layout {
+  display: block !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  max-width: none !important;
+  gap: 0 !important;
+}
+
+/* ── 미리보기 패널 인쇄 모드 ── */
+.preview-panel {
+  position: static !important;
+  width: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  flex: none !important;
+}
+
+.preview-scroll {
+  padding: 0 !important;
+  overflow: visible !important;
+  max-height: none !important;
+}
+
+/* ── 종이 (A4 가로 폭 최대 활용) ── */
+.paper {
+  width: 100% !important;
+  max-width: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  min-height: auto !important;
+}
+
+/* ── 인쇄 페이지 설정 (여백 최소화) ── */
+@page {
+  size: A4 portrait;
+  margin: 10mm 10mm 12mm 10mm;
+}
+
+/* 첫 페이지 상단 여백 약간 더 */
+@page :first {
+  margin-top: 12mm;
+}
+
+/* ── 제목 ── */
+.paper-title {
+  font-size: 18pt !important;
+  font-weight: 900 !important;
+  text-align: center !important;
+  margin: 0 0 8pt 0 !important;
+  padding-bottom: 6pt !important;
+  border-bottom: 2pt solid #2d3542 !important;
+  letter-spacing: 2pt !important;
+}
+
+/* ── 메타 테이블 ── */
+.meta-table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-size: 10pt !important;
+  table-layout: fixed !important;
+  margin-bottom: 0 !important;
+}
+
+.meta-th {
+  background: #dfe6f7 !important;
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+  border: 1pt solid #2d3542 !important;
+  padding: 5pt 6pt !important;
+  font-size: 10pt !important;
+  text-align: center !important;
+  font-weight: 700 !important;
+  vertical-align: middle !important;
+  width: 13% !important;
+}
+
+.meta-td {
+  border: 1pt solid #2d3542 !important;
+  padding: 5pt 7pt !important;
+  font-size: 10pt !important;
+  vertical-align: middle !important;
+}
+
+.td-attendees {
+  padding: 0 !important;
+}
+
+/* ── colgroup 너비 (th 13%, td 나머지 균등) ── */
+.col-th { width: 13% !important; }
+.col-td { width: 37% !important; }
+
+/* ── 참석자 인쇄 그리드 ── */
+.att-preview {
+  width: 100% !important;
+}
+
+.att-row {
+  display: grid !important;
+  width: 100% !important;
+}
+
+.att-cell {
+  display: flex !important;
+  flex-direction: column !important;
+  border-right: 1pt solid #2d3542 !important;
+  min-width: 0 !important;
+}
+.att-cell:last-child {
+  border-right: none !important;
+}
+
+.att-name {
+  padding: 3pt 4pt !important;
+  font-size: 9pt !important;
+  font-weight: 600 !important;
+  border-bottom: 1pt solid #2d3542 !important;
+  text-align: center !important;
+  min-height: auto !important;
+  background: #f0f3fa !important;
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+}
+
+.att-sign {
+  min-height: 28pt !important;
+  flex: 1;
+  text-align: center !important;
+  font-size: 8pt !important;
+  color: #94a3b8 !important;
+  padding-top: 4pt !important;
+}
+
+.att-row + .att-row {
+  border-top: 1pt solid #2d3542 !important;
+}
+
+/* ── 자리 표시자 숨기기 ── */
+.pv-placeholder,
+.minutes-placeholder {
+  display: none !important;
+}
+
+/* ── 협의록 본문 ── */
+.minutes-body {
+  border: 1pt solid #2d3542 !important;
+  border-top: none !important;
+  min-height: 0 !important;
+}
+
+.minutes-content {
+  display: block !important;
+  font-size: 10pt !important;
+  line-height: 1.75 !important;
+  padding: 10pt 8pt !important;
+  margin: 0 !important;
+  white-space: pre-wrap !important;
+  word-break: keep-all !important;
+  overflow-wrap: break-word !important;
+  font-family: inherit !important;
+}
+
+/* ── 페이지 나눔 제어 ── */
+
+/* 메타 테이블은 나눔 금지 (첫 쪽에 온전히) */
+.meta-table {
+  page-break-inside: avoid !important;
+  break-inside: avoid !important;
+}
+
+.meta-table tr {
+  page-break-inside: avoid !important;
+  break-inside: avoid !important;
+}
+
+/* 제목 + 메타 테이블은 함께 (뒤에서 나눔 회피) */
+.paper-title {
+  page-break-after: avoid !important;
+  break-after: avoid !important;
+}
+
+/* 협의록 본문은 자연스럽게 다음 쪽으로 넘어감 */
+.minutes-body {
+  page-break-before: auto;
+  page-break-inside: auto;
+}
+
+/* 안건 항목 줄 단위에서 찢어지지 않도록 */
+.agenda-pv-item {
+  display: block !important;
+  page-break-inside: avoid !important;
+}
+
+/* ── 글꼴 통일 ── */
+* {
+  font-family: "Malgun Gothic", "맑은 고딕", "Apple SD Gothic Neo", sans-serif !important;
+}
+
+/* ── 링크 밑줄 제거 ── */
+a {
+  color: inherit !important;
+  text-decoration: none !important;
+}
+
+/* ── 탭 전환에 의해 숨겨진 패널 복원 ── */
+.tab-hidden {
+  display: block !important;
+}

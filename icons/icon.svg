@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="80" fill="#245db5"/>
+  <g transform="translate(256,240)">
+    <!-- 문서 아이콘 -->
+    <rect x="-100" y="-140" width="200" height="260" rx="16" fill="#fff" opacity=".95"/>
+    <rect x="-70" y="-100" width="140" height="12" rx="4" fill="#245db5" opacity=".3"/>
+    <rect x="-70" y="-76" width="100" height="10" rx="4" fill="#245db5" opacity=".2"/>
+    <rect x="-70" y="-54" width="120" height="10" rx="4" fill="#245db5" opacity=".2"/>
+    <rect x="-70" y="-32" width="80" height="10" rx="4" fill="#245db5" opacity=".2"/>
+    <!-- 펜 -->
+    <g transform="translate(60,40) rotate(-30)">
+      <rect x="-6" y="-80" width="12" height="60" rx="3" fill="#1a4a8f"/>
+      <polygon points="-6,-20 6,-20 0,0" fill="#1a4a8f"/>
+      <rect x="-6" y="-82" width="12" height="10" rx="2" fill="#f4a623"/>
+    </g>
+    <!-- 체크마크 -->
+    <circle cx="-50" cy="60" r="28" fill="#1d7a5a"/>
+    <polyline points="-62,60 -52,72 -38,50" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <!-- 하단 텍스트 -->
+  <text x="256" y="460" text-anchor="middle" font-family="sans-serif" font-size="48" font-weight="700" fill="#fff" opacity=".9">협의록</text>
+</svg>
