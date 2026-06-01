@@ -24,6 +24,8 @@ let recordedChunks = [];
 let timerInterval  = null;
 let startTime      = 0;
 let transcript     = '';
+let recordedBlob   = null;   // 완성된 오디오 Blob
+let recordedMime   = 'audio/webm';
 
 /* ============================================================
    초기화
@@ -92,14 +94,25 @@ async function startRecording() {
   }
 
   recordedChunks = [];
+  recordedBlob   = null;
   transcript = '';
   const ta = document.getElementById('voiceTranscript');
   if (ta) ta.value = '';
 
-  mediaRecorder = new MediaRecorder(mediaStream, {
-    mimeType: MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-      ? 'audio/webm;codecs=opus' : 'audio/webm',
-  });
+  // 다운로드 버튼 숨기기
+  const dlArea = document.getElementById('recDownloadArea');
+  if (dlArea) dlArea.hidden = true;
+
+  // 지원 mimeType 결정
+  recordedMime = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+    ? 'audio/webm;codecs=opus'
+    : MediaRecorder.isTypeSupported('audio/webm')
+    ? 'audio/webm'
+    : '';
+
+  mediaRecorder = new MediaRecorder(mediaStream,
+    recordedMime ? { mimeType: recordedMime } : {}
+  );
 
   mediaRecorder.ondataavailable = e => {
     if (e.data.size > 0) recordedChunks.push(e.data);
@@ -154,7 +167,48 @@ export function stopRecordingIfActive() {
 }
 
 function onRecordingStop() {
-  const ta = document.getElementById('voiceTranscript');
+  // ── 오디오 Blob 생성 ──
+  if (recordedChunks.length > 0) {
+    const mime = recordedMime || 'audio/webm';
+    recordedBlob = new Blob(recordedChunks, { type: mime });
+
+    const sizeMB = (recordedBlob.size / 1024 / 1024).toFixed(1);
+    const ext    = mime.includes('ogg') ? 'ogg' : mime.includes('mp4') ? 'mp4' : 'webm';
+
+    // 다운로드 버튼 표시
+    const dlArea   = document.getElementById('recDownloadArea');
+    const btnDl    = document.getElementById('btnDownloadRec');
+    const fileInfo = document.getElementById('recFileInfo');
+    if (dlArea) dlArea.hidden = false;
+    if (fileInfo) fileInfo.textContent = `  (${sizeMB}MB · ${ext})`;
+
+    if (btnDl) {
+      // 이전 리스너 제거
+      const newBtn = btnDl.cloneNode(true);
+      btnDl.replaceWith(newBtn);
+
+      newBtn.addEventListener('click', () => {
+        const url   = URL.createObjectURL(recordedBlob);
+        const a     = document.createElement('a');
+        const title = (appState.meeting.title || '회의녹음').replace(/[\\/:*?"<>|]/g, '_');
+        const date  = appState.meeting.date || new Date().toISOString().slice(0, 10);
+        a.href     = url;
+        a.download = `${title}_${date}.${ext}`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 5000);
+        showToast('녹음 파일 다운로드를 시작합니다.', 'success');
+      });
+    }
+
+    showToast(`녹음 완료 (${sizeMB}MB). 파일을 다운로드할 수 있습니다.`, 'success');
+  } else {
+    showToast('녹음된 데이터가 없습니다.', 'warn');
+  }
+
+  // ── STT 텍스트 저장 ──
+  const ta   = document.getElementById('voiceTranscript');
   const text = ta?.value || transcript;
   setState({ meeting: { voiceTranscript: text, isDirty: true } });
 
