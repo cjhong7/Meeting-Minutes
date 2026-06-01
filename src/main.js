@@ -246,7 +246,7 @@ function bindAttendeeControls() {
 
 function updateAttCountLabel() {
   const el = document.getElementById('attCountLabel');
-  if (el) el.textContent = `${appState.meeting.attendeeCount}명`;
+  if (el) el.textContent = `참석자 ${appState.meeting.attendeeCount}`;
 }
 
 /* ============================================================

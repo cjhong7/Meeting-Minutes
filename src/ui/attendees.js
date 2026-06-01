@@ -108,13 +108,16 @@ export function updateAttendeePreview() {
       const nameDiv = document.createElement('div');
       nameDiv.className = 'att-name';
       nameDiv.textContent = attendeeNames[idx] || '';
-
-      const signDiv = document.createElement('div');
-      signDiv.className = 'att-sign';
-      signDiv.setAttribute('aria-label', '서명란');
-
       cell.appendChild(nameDiv);
-      cell.appendChild(signDiv);
+
+      // 1명일 때는 서명란 없이 이름만 한 줄로
+      if (attendeeCount > 1) {
+        const signDiv = document.createElement('div');
+        signDiv.className = 'att-sign';
+        signDiv.setAttribute('aria-label', '서명란');
+        cell.appendChild(signDiv);
+      }
+
       rowDiv.appendChild(cell);
     });
 
