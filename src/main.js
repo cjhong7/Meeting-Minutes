@@ -219,21 +219,11 @@ function bindAttendeeControls() {
     setState({ meeting: { isDirty: true } });
   });
 
-  document.getElementById('btnAttDec')?.addEventListener('click', async () => {
-    const { attendeeCount, attendeeNames } = appState.meeting;
+  document.getElementById('btnAttDec')?.addEventListener('click', () => {
+    const { attendeeCount } = appState.meeting;
     if (attendeeCount <= 1) {
       showToast('최소 1명이어야 합니다.', 'warn');
       return;
-    }
-
-    // 사라질 칸에 이름이 있으면 확인
-    const willRemoveIdx = attendeeCount - 1;
-    if (attendeeNames[willRemoveIdx]?.trim()) {
-      const ok = await confirm(
-        `참석자 ${willRemoveIdx + 1}(${attendeeNames[willRemoveIdx]})을 삭제하겠습니까?`,
-        '삭제'
-      );
-      if (!ok) return;
     }
 
     changeAttendeeCount(-1);
