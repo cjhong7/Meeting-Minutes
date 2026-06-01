@@ -18,25 +18,17 @@ import { callGemini } from './gemini.js';
 import { callClaude } from './claude.js';
 import { simulate } from './simulator.js';
 
-/**
- * 모델 등급 맵 (계획서 Ⅵ-6)
- *  - low:  저가형 (기본)
- *  - high: 고급형 (고품질 토글)
- */
-const MODEL_MAP = {
-  openai: {
-    low:  'gpt-4o-mini',
-    high: 'gpt-4o',
-  },
-  gemini: {
-    low:  'gemini-2.5-flash',
-    high: 'gemini-2.5-pro',
-  },
-  claude: {
-    low:  'claude-haiku-4-20250414',
-    high: 'claude-sonnet-4-20250514',
-  },
+/** 기본 모델 (사용자가 선택하지 않은 경우 사용) */
+const DEFAULT_MODEL = {
+  openai: 'gpt-4o-mini',
+  gemini: 'gemini-2.5-flash',
+  claude: 'claude-haiku-4-20250414',
 };
+
+/** localStorage에서 사용자가 선택한 모델을 가져옴 */
+function getSelectedModel(engine) {
+  return localStorage.getItem(`anti_model_${engine}`) || DEFAULT_MODEL[engine];
+}
 
 /**
  * 협의록을 생성합니다.
@@ -50,8 +42,7 @@ const MODEL_MAP = {
  * @returns {Promise<string>}  생성된 협의록 본문
  */
 export async function generate({ text, mode, title, date, agendas }) {
-  const engine  = appState.aiEngine;   // 'openai' | 'gemini' | 'claude' | 'sim'
-  const quality = appState.aiQuality;  // 'low' | 'high'
+  const engine = appState.aiEngine;   // 'openai' | 'gemini' | 'claude' | 'sim'
 
   // ── 키 없음 → 로컬 시뮬레이션 ──
   if (engine === 'sim') {
@@ -67,11 +58,11 @@ export async function generate({ text, mode, title, date, agendas }) {
     );
   }
 
-  // ── 프롬프트 빌드 ──
+  // ── 모델 결정 (사용자 선택 모델 우선) ──
   const { system, user } = buildPrompt({ text, mode, title, date, agendas });
 
-  // ── 모델 선택 ──
-  const model = MODEL_MAP[engine]?.[quality] || MODEL_MAP[engine]?.low;
+  // ── 모델 결정 ──
+  const model = getSelectedModel(engine);
 
   // ── 엔진별 호출 ──
   let result;

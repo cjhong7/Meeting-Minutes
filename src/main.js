@@ -555,49 +555,46 @@ function bindAiSettingsModal() {
 }
 
 async function syncAiSettingsModal() {
-  // 현재 설정 → 모달 UI 반영
   const engine = appState.aiEngine;
   const radios = document.querySelectorAll('.engine-radio');
   radios.forEach(r => { r.checked = r.value === engine; });
   updateKeyFieldsVisibility(engine);
-
-  const chk = document.getElementById('chkHighQuality');
-  if (chk) chk.checked = appState.aiQuality === 'high';
-  updateQualityHint(appState.aiQuality === 'high');
-
-  // 월별 사용량 표시
   updateUsageDisplay();
 
-  // 키/PIN 저장 상태 표시
+  // 저장된 모델 선택값 복원
+  ['openai', 'gemini', 'claude'].forEach(eng => {
+    const saved = localStorage.getItem(`anti_model_${eng}`);
+    const sel = document.getElementById(`sel${eng.charAt(0).toUpperCase() + eng.slice(1)}Model`);
+    if (sel && saved) sel.value = saved;
+  });
+
+  // 키/PIN 저장 상태 표시 (비동기, 모달 열린 뒤 업데이트)
   try {
     const { hasKey, needsPin } = await import('./crypto/keystore.js');
-    const engineMap = { openai: 'Openai', gemini: 'Gemini', claude: 'Claude' };
-    for (const [eng, label] of Object.entries(engineMap)) {
+    for (const eng of ['openai', 'gemini', 'claude']) {
+      const label  = eng.charAt(0).toUpperCase() + eng.slice(1);
       const saved  = await hasKey(eng);
-      const pinSet = saved && await needsPin(eng);
-      const badge  = document.getElementById(`keyStatus${label}`);
-      if (badge) {
-        if (saved && pinSet)  { badge.textContent = '✅ 저장됨 🔒 PIN설정'; badge.className = 'key-saved-badge key-badge-ok'; }
-        else if (saved)       { badge.textContent = '✅ 저장됨';             badge.className = 'key-saved-badge key-badge-ok'; }
-        else                  { badge.textContent = '';                       badge.className = 'key-saved-badge'; }
+      const pinSet = saved && (await needsPin(eng));
+      const statusEl = document.getElementById(`keyStatus${label}`);
+      const inputEl  = document.getElementById(`in${label}Key`);
 
-        // 키가 저장된 경우 placeholder 변경
-        const input = document.getElementById(`in${label}Key`);
-        if (input) {
-          input.placeholder = saved
-            ? '저장된 키 있음 — 변경하려면 새 키 입력'
-            : { Openai: 'sk-...', Gemini: 'AIzaSy...', Claude: 'sk-ant-...' }[label];
-        }
+      if (statusEl) {
+        if (saved && pinSet)  statusEl.textContent = '✅ 키 저장됨  🔒 PIN 설정됨';
+        else if (saved)       statusEl.textContent = '✅ 키 저장됨 (새 키 입력 시 덮어씀)';
+        else                  statusEl.textContent = '⚠ 저장된 키 없음';
+        statusEl.className = saved ? 'key-saved-status key-status-ok' : 'key-saved-status key-status-none';
+      }
+      if (inputEl) {
+        const defaults = { openai: 'sk-...', gemini: 'AIzaSy...', claude: 'sk-ant-...' };
+        inputEl.placeholder = saved ? '변경하려면 새 키 입력' : defaults[eng];
       }
     }
 
     // PIN 상태
     const pinBadge = document.getElementById('pinStatus');
-    // 현재 선택 엔진에 PIN이 있는지 확인
     if (pinBadge && engine !== 'sim') {
       const pinSet = await needsPin(engine);
-      pinBadge.textContent  = pinSet ? '🔒 PIN 설정되어 있음' : '';
-      pinBadge.className    = pinSet ? 'key-saved-badge key-badge-pin' : 'key-saved-badge';
+      pinBadge.textContent = pinSet ? '🔒 PIN 설정됨' : '';
       const pinInput = document.getElementById('inPin');
       if (pinInput) pinInput.placeholder = pinSet ? 'PIN 변경하려면 새 PIN 입력' : '숫자 4~8자리';
     }
@@ -662,9 +659,16 @@ async function saveAiSettings() {
       }
     }
 
-    // 엔진·품질 설정 localStorage에 보관 (키가 아니므로 평문 OK)
+    // 엔진·품질·모델 설정 localStorage에 보관
     localStorage.setItem('anti_conver_engine', engine);
     localStorage.setItem('anti_conver_quality', quality);
+
+    // 각 엔진별 선택 모델 저장
+    ['openai', 'gemini', 'claude'].forEach(eng => {
+      const label = eng.charAt(0).toUpperCase() + eng.slice(1);
+      const sel   = document.getElementById(`sel${label}Model`);
+      if (sel?.value) localStorage.setItem(`anti_model_${eng}`, sel.value);
+    });
   } catch (err) {
     console.error('[AI Settings]', err);
     showToast(`설정 저장 실패: ${err.message}`, 'error');

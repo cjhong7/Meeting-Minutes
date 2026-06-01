@@ -1159,10 +1159,14 @@ a { color: var(--blue); }
 .toast.toast-warn    { background: var(--gold); }
 .toast.toast-error   { background: var(--red); }
 
-/* ── 키 저장 상태 배지 ── */
+/* ── 키 저장 상태 표시 ── */
 .key-saved-badge { font-size: 11px; font-weight: 600; margin-left: 6px; vertical-align: middle; }
 .key-badge-ok  { color: var(--green); }
 .key-badge-pin { color: var(--blue); }
+.key-saved-status { font-size: 12px; font-weight: 600; margin: 2px 0 6px; padding: 4px 8px; border-radius: 4px; }
+.key-status-ok   { color: var(--green); background: #f0fdf4; }
+.key-status-none { color: var(--muted); background: var(--surface); }
+.model-select { margin-top: 4px; }
 
 /* ── body scroll lock (모달 열릴 때) ── */
 body.modal-open { overflow: hidden; }

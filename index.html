@@ -447,43 +447,62 @@
           </div>
         </div>
 
-        <!-- OpenAI 키 -->
+        <!-- OpenAI 키 + 모델 선택 -->
         <div class="form-field engine-key-field" id="fieldOpenaiKey" hidden>
           <label class="field-label" for="inOpenaiKey">
             OpenAI API Key <small class="key-hint">(sk-...)</small>
-            <span class="key-saved-badge" id="keyStatusOpenai"></span>
           </label>
+          <p class="key-saved-status" id="keyStatusOpenai"></p>
           <div class="key-row">
             <input class="field-input" id="inOpenaiKey" type="password"
               placeholder="sk-..." autocomplete="off">
             <button class="btn btn-sm btn-ghost" id="btnShowOpenaiKey" type="button">보기</button>
           </div>
+          <label class="field-label" style="margin-top:8px">모델 선택</label>
+          <select class="field-input model-select" id="selOpenaiModel">
+            <option value="gpt-4o-mini">gpt-4o-mini (저가 · 빠름)</option>
+            <option value="gpt-4o">gpt-4o (고품질)</option>
+            <option value="gpt-4.1-mini">gpt-4.1-mini (최신 저가)</option>
+            <option value="gpt-4.1">gpt-4.1 (최신 고품질)</option>
+          </select>
         </div>
 
-        <!-- Gemini 키 -->
+        <!-- Gemini 키 + 모델 선택 -->
         <div class="form-field engine-key-field" id="fieldGeminiKey" hidden>
           <label class="field-label" for="inGeminiKey">
             Gemini API Key <small class="key-hint">(AIzaSy...)</small>
-            <span class="key-saved-badge" id="keyStatusGemini"></span>
           </label>
+          <p class="key-saved-status" id="keyStatusGemini"></p>
           <div class="key-row">
             <input class="field-input" id="inGeminiKey" type="password"
               placeholder="AIzaSy..." autocomplete="off">
             <button class="btn btn-sm btn-ghost" id="btnShowGeminiKey" type="button">보기</button>
           </div>
+          <label class="field-label" style="margin-top:8px">모델 선택</label>
+          <select class="field-input model-select" id="selGeminiModel">
+            <option value="gemini-2.5-flash">gemini-2.5-flash (기본 · 빠름)</option>
+            <option value="gemini-2.5-pro">gemini-2.5-pro (고품질)</option>
+            <option value="gemini-2.0-flash-lite">gemini-2.0-flash-lite (경제형)</option>
+          </select>
         </div>
 
-        <!-- Claude 키 -->
+        <!-- Claude 키 + 모델 선택 -->
         <div class="form-field engine-key-field" id="fieldClaudeKey" hidden>
           <label class="field-label" for="inClaudeKey">
             Claude API Key <small class="key-hint">(sk-ant-...)</small>
-            <span class="key-saved-badge" id="keyStatusClaude"></span>
           </label>
+          <p class="key-saved-status" id="keyStatusClaude"></p>
           <div class="key-row">
             <input class="field-input" id="inClaudeKey" type="password"
               placeholder="sk-ant-..." autocomplete="off">
             <button class="btn btn-sm btn-ghost" id="btnShowClaudeKey" type="button">보기</button>
           </div>
+          <label class="field-label" style="margin-top:8px">모델 선택</label>
+          <select class="field-input model-select" id="selClaudeModel">
+            <option value="claude-haiku-4-20250414">claude-haiku-4 (경제형 · 빠름)</option>
+            <option value="claude-sonnet-4-20250514">claude-sonnet-4 (기본 고품질)</option>
+            <option value="claude-opus-4-5">claude-opus-4 (최고품질)</option>
+          </select>
         </div>
 
         <!-- PIN -->
@@ -498,13 +517,13 @@
             PIN을 잊으면 키를 다시 입력해야 합니다.</p>
         </div>
 
-        <!-- 고품질 토글 -->
-        <div class="form-field" id="fieldQuality">
+        <!-- 고품질 토글 (모델 선택 없는 경우 폴백) -->
+        <div class="form-field" id="fieldQuality" hidden>
           <label class="toggle-label">
             <input type="checkbox" id="chkHighQuality">
-            <span>고품질 모델 사용 (비용 약 5~10배 증가)</span>
+            <span>고품질 모델 사용</span>
           </label>
-          <p class="hint-text" id="qualityHint">저가형: gpt-4o-mini / gemini-flash / claude-haiku</p>
+          <p class="hint-text" id="qualityHint"></p>
         </div>
 
         <!-- 사용량 표시 -->
