@@ -501,6 +501,13 @@ a { color: var(--blue); }
 .rec-timer { font-size: 18px; font-weight: 700; color: var(--red); text-align: center; margin: 12px 0; animation: blink 1s infinite; }
 @keyframes blink { 50% { opacity: .5; } }
 
+.btn-recording {
+  background: var(--red) !important;
+  color: #fff !important;
+  animation: blink 1s infinite;
+  cursor: default !important;
+}
+
 .rec-controls { display: flex; gap: 10px; justify-content: center; margin-bottom: 10px; }
 
 .voice-transcript { min-height: 120px; }

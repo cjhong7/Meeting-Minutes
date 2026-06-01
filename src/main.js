@@ -21,7 +21,7 @@ import { showToast } from './ui/toast.js';
 import { renderAttendeeInputs, updateAttendeePreview, changeAttendeeCount } from './ui/attendees.js';
 import { updatePreview, showMinutes, clearMinutes, showGeneratingSpinner } from './ui/preview.js';
 import { initTypingMode, stopDictationIfActive } from './modes/typing.js';
-import { initVoiceMode, stopRecordingIfActive } from './modes/voice.js';
+import { initVoiceMode, stopRecordingIfActive, activateVoiceMode } from './modes/voice.js';
 import { initPlanMode } from './modes/plan.js';
 import { initPenMode } from './modes/pen.js';
 
@@ -258,6 +258,8 @@ function bindModeSwitch() {
       setState({ meeting: { mode, isDirty: true } });
       showModePanel(mode);
       updateGenerateHint();
+      // 녹음 모드 진입 시 마이크 권한 확인 + 버튼 활성화
+      if (mode === 'voice') activateVoiceMode();
     });
   });
 }

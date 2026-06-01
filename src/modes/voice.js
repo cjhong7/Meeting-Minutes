@@ -111,9 +111,15 @@ async function startRecording() {
   startBrowserStt();
   acquireWakeLock();
 
-  // UI 전환
-  document.getElementById('btnStartRec').hidden = true;
-  document.getElementById('btnStopRec').hidden = false;
+  // UI 전환 — 시작 버튼을 "● 녹음중"으로 변경
+  const btnStart = document.getElementById('btnStartRec');
+  const btnStop  = document.getElementById('btnStopRec');
+  if (btnStart) {
+    btnStart.textContent = '● 녹음중';
+    btnStart.classList.add('btn-recording');
+    btnStart.disabled = true;
+  }
+  if (btnStop) btnStop.hidden = false;
   document.getElementById('recTimer').hidden = false;
   document.getElementById('voiceTranscriptArea').hidden = false;
 
@@ -130,7 +136,13 @@ function stopRecording() {
   releaseWakeLock();
   clearInterval(timerInterval);
 
-  document.getElementById('btnStartRec').hidden = false;
+  // 버튼 원래대로 복원
+  const btnStart = document.getElementById('btnStartRec');
+  if (btnStart) {
+    btnStart.textContent = '녹음 시작';
+    btnStart.classList.remove('btn-recording');
+    btnStart.disabled = false;
+  }
   document.getElementById('btnStopRec').hidden = true;
   document.getElementById('recTimer').hidden = true;
   showToast('녹음이 정지되었습니다.', 'info');
