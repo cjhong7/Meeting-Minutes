@@ -33,6 +33,7 @@ export function simulate({ text, mode = 'typing', title = '', date = '', agendas
   const section2   = isPlanning ? '안내 사항'        : '전달 사항';
   const titleLabel = title.trim() || `${type}`;
   const dateStr    = formatDate(date || todayIso());
+  const validAgendas = (agendas || []).filter(a => a?.trim());
 
   // 1. 줄 분리 + 전처리
   const lines = text.split('\n').map(l => preprocessLine(l));
@@ -40,31 +41,48 @@ export function simulate({ text, mode = 'typing', title = '', date = '', agendas
   // 2. 섹션 분류
   const { sec1Lines, sec2Lines } = splitSections(lines);
 
-  // 3~5. 각 섹션 정규화 (계층 번호 + 어미 변환)
-  const sec1Text = normalizeSection(sec1Lines);
-  const sec2Text = normalizeSection(sec2Lines);
-
-  // 6. 양식 배치
+  // 3. 안건이 있으면 안건 제목 중심으로 구조화
   const parts = [];
   parts.push(`■ ${type} ${titleLabel} (${dateStr})`);
   parts.push('');
 
-  if (sec1Text.trim()) {
-    parts.push(`[${section1}]`);
-    parts.push(sec1Text);
-    parts.push('');
+  const sec1Content = sec1Lines.length ? sec1Lines : lines;
+  const sec1NonEmpty = sec1Content.filter(l => l.trim());
+
+  parts.push(`[${section1}]`);
+
+  if (validAgendas.length > 0 && sec1NonEmpty.length > 0) {
+    // 안건 기반 구조화: 각 안건을 1단계 제목으로, 내용을 가나다로 배치
+    if (validAgendas.length === 1) {
+      // 안건 1개: 제목 + 전체 내용을 하위로
+      parts.push(`1. ${validAgendas[0]}`);
+      const subItems = normalizeSectionAsSub(sec1Content);
+      if (subItems.trim()) parts.push(subItems);
+    } else {
+      // 안건 여러 개: 내용을 안건 수로 균등 배분
+      const linesPerAgenda = Math.ceil(sec1NonEmpty.length / validAgendas.length);
+      validAgendas.forEach((agenda, i) => {
+        parts.push(`${i + 1}. ${agenda}`);
+        const start = i * linesPerAgenda;
+        const chunk = sec1NonEmpty.slice(start, start + linesPerAgenda);
+        if (chunk.length > 0) {
+          const subItems = normalizeSectionAsSub(chunk);
+          if (subItems.trim()) parts.push(subItems);
+        }
+      });
+    }
+  } else {
+    // 안건 없음: 기존 방식
+    const normalized = normalizeSection(sec1Content);
+    if (normalized.trim()) parts.push(normalized);
   }
 
-  if (sec2Text.trim()) {
+  parts.push('');
+
+  if (sec2Lines.filter(l => l.trim()).length > 0) {
     parts.push(`[${section2}]`);
-    parts.push(sec2Text);
+    parts.push(normalizeSection(sec2Lines));
     parts.push('');
-  }
-
-  if (!sec1Text.trim() && !sec2Text.trim()) {
-    // 섹션 구분 없이 전체 본문
-    parts.push(`[${section1}]`);
-    parts.push(normalizeSection(lines));
   }
 
   const result = parts.join('\n').trimEnd();
@@ -105,6 +123,39 @@ function splitSections(lines) {
   }
 
   return { sec1Lines: sec1, sec2Lines: sec2 };
+}
+
+/**
+ * 안건 하위 항목으로 정규화 (가. 나. 다. → - 2단계)
+ * 안건 제목이 이미 1단계이므로 내용은 2단계부터 시작
+ */
+function normalizeSectionAsSub(lines) {
+  const KO_ALPHA = ['가', '나', '다', '라', '마', '바', '사', '아', '자', '차', '카', '타', '파', '하'];
+  const result = [];
+  let alphaIdx = 0;
+
+  for (const line of lines) {
+    if (!line.trim()) continue;
+
+    const content = line.trim()
+      .replace(/^(\d+[).]\s*)/, '')
+      .replace(/^([가-하][).]\s*)/, '')
+      .replace(/^[-•]\s*/, '');
+
+    const finalContent = convertVerb(content.trim());
+    if (!finalContent) continue;
+
+    const indent = line.match(/^(\s*)/)[1].length;
+    if (indent >= 4) {
+      result.push(`    - ${finalContent}`);
+    } else {
+      const letter = KO_ALPHA[alphaIdx % KO_ALPHA.length];
+      alphaIdx++;
+      result.push(`  ${letter}. ${finalContent}`);
+    }
+  }
+
+  return result.join('\n');
 }
 
 /**
