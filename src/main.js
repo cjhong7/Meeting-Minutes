@@ -563,9 +563,9 @@ async function syncAiSettingsModal() {
     if (sel && saved) sel.value = saved;
   });
 
-  // 키/PIN 저장 상태 표시 (비동기, 모달 열린 뒤 업데이트)
+  // 키 복원 + 상태 표시 (비동기)
   try {
-    const { hasKey, needsPin } = await import('./crypto/keystore.js');
+    const { hasKey, needsPin, loadKey } = await import('./crypto/keystore.js');
     for (const eng of ['openai', 'gemini', 'claude']) {
       const label  = eng.charAt(0).toUpperCase() + eng.slice(1);
       const saved  = await hasKey(eng);
@@ -573,15 +573,20 @@ async function syncAiSettingsModal() {
       const statusEl = document.getElementById(`keyStatus${label}`);
       const inputEl  = document.getElementById(`in${label}Key`);
 
+      // 상태 배지 표시
       if (statusEl) {
         if (saved && pinSet)  statusEl.textContent = '✅ 키 저장됨  🔒 PIN 설정됨';
-        else if (saved)       statusEl.textContent = '✅ 키 저장됨 (새 키 입력 시 덮어씀)';
+        else if (saved)       statusEl.textContent = '✅ 키 저장됨';
         else                  statusEl.textContent = '⚠ 저장된 키 없음';
         statusEl.className = saved ? 'key-saved-status key-status-ok' : 'key-saved-status key-status-none';
       }
-      if (inputEl) {
-        const defaults = { openai: 'sk-...', gemini: 'AIzaSy...', claude: 'sk-ant-...' };
-        inputEl.placeholder = saved ? '변경하려면 새 키 입력' : defaults[eng];
+
+      // 저장된 키를 입력 필드에 복원 (PIN 없는 키만)
+      if (inputEl && saved && !pinSet) {
+        try {
+          const decrypted = await loadKey(eng, '');
+          if (decrypted) inputEl.value = decrypted;
+        } catch {}
       }
     }
 
@@ -660,11 +665,8 @@ async function saveAiSettings() {
     return;
   }
 
-  // 키 입력 필드 비우기 (보안)
-  document.getElementById('inOpenaiKey') && (document.getElementById('inOpenaiKey').value = '');
-  document.getElementById('inGeminiKey') && (document.getElementById('inGeminiKey').value = '');
-  document.getElementById('inClaudeKey') && (document.getElementById('inClaudeKey').value = '');
-  document.getElementById('inPin')      && (document.getElementById('inPin').value = '');
+  // PIN만 비우기 (키는 다음 열 때 복원되므로 유지)
+  document.getElementById('inPin') && (document.getElementById('inPin').value = '');
 
   closeModal('modalAiSettings');
   showToast('AI 설정이 저장되었습니다.', 'success');

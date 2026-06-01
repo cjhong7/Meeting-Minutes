@@ -8,6 +8,7 @@
  */
 
 const BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
+const BASE_URL_V1 = 'https://generativelanguage.googleapis.com/v1/models';
 
 /**
  * Gemini generateContent API를 호출합니다.
@@ -22,7 +23,9 @@ const BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
 export async function callGemini({ system, user, model, apiKey }) {
   if (!apiKey) throw new Error('Gemini API 키가 설정되지 않았습니다.');
 
-  const endpoint = `${BASE_URL}/${model}:generateContent?key=${apiKey}`;
+  // 2.0 모델은 v1, 2.5+ 모델은 v1beta 사용
+  const base = model.includes('2.0') ? BASE_URL_V1 : BASE_URL;
+  const endpoint = `${base}/${model}:generateContent?key=${apiKey}`;
 
   const body = {
     systemInstruction: {
