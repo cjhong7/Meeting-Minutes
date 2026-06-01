@@ -532,11 +532,6 @@ function bindAiSettingsModal() {
     });
   });
 
-  // 고품질 토글 → hint 텍스트 업데이트
-  document.getElementById('chkHighQuality')?.addEventListener('change', e => {
-    updateQualityHint(e.target.checked);
-  });
-
   // 키 보기/숨기기 버튼
   ['OpenaiKey', 'GeminiKey', 'ClaudeKey'].forEach(name => {
     const btn = document.getElementById(`btnShow${name}`);
@@ -628,21 +623,12 @@ function updateKeyFieldsVisibility(engine) {
   document.getElementById('fieldPin')?.toggleAttribute('hidden', engine === 'sim');
 }
 
-function updateQualityHint(high) {
-  const hint = document.getElementById('qualityHint');
-  if (!hint) return;
-  hint.textContent = high
-    ? '고급형: gpt-4o / gemini-pro / claude-sonnet'
-    : '저가형: gpt-4o-mini / gemini-flash / claude-haiku';
-}
-
 async function saveAiSettings() {
   const engineEl = document.querySelector('.engine-radio:checked');
   const engine = engineEl ? engineEl.value : 'sim';
-  const quality = document.getElementById('chkHighQuality')?.checked ? 'high' : 'low';
   const pin = document.getElementById('inPin')?.value || '';
 
-  setState({ aiEngine: engine, aiQuality: quality });
+  setState({ aiEngine: engine });
 
   // keystore.js로 암호화 저장
   try {
@@ -659,9 +645,8 @@ async function saveAiSettings() {
       }
     }
 
-    // 엔진·품질·모델 설정 localStorage에 보관
+    // 엔진·모델 설정 localStorage에 보관
     localStorage.setItem('anti_conver_engine', engine);
-    localStorage.setItem('anti_conver_quality', quality);
 
     // 각 엔진별 선택 모델 저장
     ['openai', 'gemini', 'claude'].forEach(eng => {
@@ -733,9 +718,8 @@ function bindBeforeUnload() {
    저장된 AI 설정 복원 (부팅 시)
    ============================================================ */
 function restoreSavedSettings() {
-  const engine  = localStorage.getItem('anti_conver_engine')  || 'sim';
-  const quality = localStorage.getItem('anti_conver_quality') || 'low';
-  setState({ aiEngine: engine, aiQuality: quality });
+  const engine = localStorage.getItem('anti_conver_engine') || 'sim';
+  setState({ aiEngine: engine });
 
   // 저장된 키가 있으면 세션 캐시에 복원 시도 (PIN 없는 키만 자동 복원)
   (async () => {
