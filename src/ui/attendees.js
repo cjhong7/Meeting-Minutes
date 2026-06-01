@@ -9,7 +9,7 @@
 
 import { appState, setState } from '../state.js';
 
-const MIN_ATT = 3;
+const MIN_ATT = 1;
 const MAX_ATT = 16;
 
 /* ============================================================

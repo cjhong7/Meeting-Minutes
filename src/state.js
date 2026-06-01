@@ -30,7 +30,7 @@ export function createMeeting() {
     time:          '',        // HH:MM
     place:         '',        // 장소
     agendas:       [''],      // string[] (최소 1개 빈 안건)
-    attendeeCount: 6,         // 3~16
+    attendeeCount: 6,         // 1~16
     attendeeNames: Array(6).fill(''),
 
     // ── 입력 모드 ──

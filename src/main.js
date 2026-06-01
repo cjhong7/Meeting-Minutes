@@ -221,8 +221,8 @@ function bindAttendeeControls() {
 
   document.getElementById('btnAttDec')?.addEventListener('click', async () => {
     const { attendeeCount, attendeeNames } = appState.meeting;
-    if (attendeeCount <= 3) {
-      showToast('최소 3명이어야 합니다.', 'warn');
+    if (attendeeCount <= 1) {
+      showToast('최소 1명이어야 합니다.', 'warn');
       return;
     }
 
