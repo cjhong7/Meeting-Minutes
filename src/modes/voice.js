@@ -317,6 +317,8 @@ async function acquireWakeLock() {
 function releaseWakeLock() { wakeLock?.release(); wakeLock = null; }
 
 /* ── 파일 첨부 ── */
+let attachedAudioFile = null;
+
 function bindFileAttach() {
   const dropZone = document.getElementById('voiceDropZone');
   const fileInput = document.getElementById('voiceFileInput');
@@ -335,22 +337,110 @@ function bindFileAttach() {
   });
 
   document.getElementById('btnRemoveAttached')?.addEventListener('click', () => {
+    attachedAudioFile = null;
     document.getElementById('attachedFileInfo').hidden = true;
+    document.getElementById('fileSttControls').hidden = true;
     document.getElementById('voiceDropZone').hidden = false;
   });
+
+  // 텍스트 변환 버튼
+  document.getElementById('btnFileToText')?.addEventListener('click', runWhisperStt);
 }
 
 function handleAudioFile(file) {
+  attachedAudioFile = file;
   document.getElementById('attachedFileName').textContent = file.name;
   document.getElementById('attachedFileMeta').textContent = `(${(file.size / 1024 / 1024).toFixed(1)}MB)`;
   document.getElementById('attachedFileInfo').hidden = false;
+  document.getElementById('fileSttControls').hidden = false;
   document.getElementById('voiceDropZone').hidden = true;
   document.getElementById('voiceTranscriptArea').hidden = false;
 
   if (file.size > 25 * 1024 * 1024) {
-    showToast('파일이 25MB를 초과합니다. Whisper 전송 시 분할이 필요합니다.', 'warn');
+    showToast('파일이 25MB를 초과합니다. 25MB 이하 파일을 권장합니다.', 'warn');
   }
-  showToast('파일이 첨부되었습니다. Whisper STT 변환은 AI 설정에서 OpenAI 키를 입력하세요.', 'info');
+}
+
+/* ── Whisper STT 변환 ── */
+async function runWhisperStt() {
+  if (!attachedAudioFile) {
+    showToast('첨부된 오디오 파일이 없습니다.', 'warn');
+    return;
+  }
+
+  // OpenAI 키 확인 (Whisper는 OpenAI 전용)
+  let apiKey = sessionStorage.getItem('anti_key_openai') || '';
+  if (!apiKey) {
+    try {
+      const { loadKey, needsPin } = await import('../crypto/keystore.js');
+      const pinRequired = await needsPin('openai');
+      if (!pinRequired) apiKey = await loadKey('openai', '');
+    } catch {}
+  }
+
+  if (!apiKey) {
+    showToast('Whisper STT에는 OpenAI API 키가 필요합니다.\n⚙ AI 설정에서 OpenAI 키를 입력해 주세요.', 'error');
+    return;
+  }
+
+  const btn      = document.getElementById('btnFileToText');
+  const progress = document.getElementById('sttProgress');
+  const ta       = document.getElementById('voiceTranscript');
+
+  // UI 상태 변경
+  if (btn) { btn.disabled = true; btn.textContent = '변환 중…'; }
+  if (progress) progress.textContent = '오디오 전송 중…';
+
+  try {
+    const file = attachedAudioFile;
+
+    // 25MB 이하: 직접 전송
+    if (file.size <= 25 * 1024 * 1024) {
+      if (progress) progress.textContent = `Whisper로 전송 중… (${(file.size / 1024 / 1024).toFixed(1)}MB)`;
+      const text = await callWhisper(file, apiKey);
+      if (ta) ta.value = text;
+      setState({ meeting: { voiceTranscript: text, isDirty: true } });
+      updateCharCount();
+      showToast('텍스트 변환 완료!', 'success');
+    } else {
+      // 25MB 초과: 경고만 (ffmpeg.wasm 분할은 추후)
+      showToast('25MB 초과 파일은 현재 지원하지 않습니다. 파일을 분할하거나 짧게 녹음해 주세요.', 'warn');
+    }
+  } catch (err) {
+    console.error('[Whisper]', err);
+    showToast(`변환 실패: ${err.message}`, 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '텍스트 변환 (Whisper STT)'; }
+    if (progress) progress.textContent = '';
+  }
+}
+
+/** Whisper API 호출 */
+async function callWhisper(file, apiKey) {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('model', 'whisper-1');
+  formData.append('language', 'ko');
+  formData.append('response_format', 'text');
+
+  const res = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${apiKey}` },
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}));
+    throw new Error(errData.error?.message || `Whisper 오류 (${res.status})`);
+  }
+
+  return (await res.text()).trim();
+}
+
+function updateCharCount() {
+  const ta = document.getElementById('voiceTranscript');
+  const cc = document.getElementById('voiceCharCount');
+  if (ta && cc) cc.textContent = ta.value.length + '자';
 }
 
 /* ── 텍스트 동기화 ── */

@@ -510,6 +510,9 @@ a { color: var(--blue); }
 
 .rec-controls { display: flex; gap: 10px; justify-content: center; margin-bottom: 10px; }
 
+.file-stt-controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 10px; }
+.stt-progress { font-size: 13px; color: var(--blue); font-weight: 600; }
+
 .voice-transcript { min-height: 120px; }
 
 /* ── 파일 드롭존 (녹음·계획서 공통) ── */
