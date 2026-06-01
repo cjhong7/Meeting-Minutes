@@ -60,7 +60,9 @@ export function renderAttendeeInputs() {
       input = document.createElement('input');
       input.type = 'text';
       input.className = 'attendee-name-input field-input';
-      input.autocomplete = 'off';
+      input.autocomplete = 'nope';          // Chrome 암호관리자 팝업 방지
+      input.setAttribute('data-lpignore', 'true');   // LastPass 방지
+      input.setAttribute('data-form-type', 'other'); // 크롬 휴리스틱 방지
       input.maxLength = 10;
 
       input.addEventListener('input', e => {
