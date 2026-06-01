@@ -1,17 +1,12 @@
 /**
  * ai/prompt.js — AI 프롬프트 생성
  *
- * 계획서 Ⅵ-4 프롬프트 전문 기반.
- * 3엔진 공통 프롬프트, 모드별 변수(type/section1/section2) 주입.
+ * 학교 협의록 양식 규칙을 정확히 반영한 프롬프트.
+ * 3엔진 공통, 모드별 변수(type/section1/section2) 주입.
  */
 
 import { todayIso } from '../state.js';
 
-/**
- * 모드별 변수 맵
- * - 녹음·타자·펜 → 회의록 모드
- * - 계획서 → 계획안 모드
- */
 const MODE_VARS = {
   meeting: {
     type:     '회의록',
@@ -26,14 +21,7 @@ const MODE_VARS = {
 };
 
 /**
- * AI 프롬프트를 생성합니다.
- *
  * @param {Object} params
- * @param {string}   params.text      입력 원문
- * @param {string}   params.mode      'typing' | 'plan' | 'voice' | 'pen'
- * @param {string}   [params.title]   회의명
- * @param {string}   [params.date]    YYYY-MM-DD
- * @param {string[]} [params.agendas] 안건 목록
  * @returns {{ system: string, user: string }}
  */
 export function buildPrompt({ text, mode = 'typing', title = '', date = '', agendas = [] }) {
@@ -43,33 +31,68 @@ export function buildPrompt({ text, mode = 'typing', title = '', date = '', agen
   const titleLabel = title.trim() || vars.type;
   const dateStr    = formatDate(date || todayIso());
 
-  // 안건 목록이 있으면 참고 정보로 추가
   const agendaInfo = agendas.filter(a => a?.trim()).length > 0
-    ? `\n\n[안건]\n${agendas.filter(a => a?.trim()).map((a, i) => `${i + 1}. ${a}`).join('\n')}`
+    ? `\n\n[안건 목록]\n${agendas.filter(a => a?.trim()).map((a, i) => `${i + 1}. ${a}`).join('\n')}`
     : '';
 
-  const system = `당신은 학교 회의록 정리 전문가입니다.
-다음 [회의 내용]을 바탕으로 핵심을 '${vars.section1}'과 '${vars.section2}'으로
-구분하여 정리해주세요. 절대 제공되지 않은 정보를 추측하거나 추가하지 마세요.
+  const system = `당신은 대한민국 초·중·고등학교 협의록 작성 전문가입니다.
+아래 [회의 내용]을 학교 공문서 양식에 맞는 정식 협의록으로 작성해 주세요.
 
-[출력 형식 및 스타일 가이드라인]
-1. 제목: '■ ${vars.type} ${titleLabel} (${dateStr})'
-2. 2섹션 구분 (해당 내용 있을 때만)
-   - [${vars.section1}]
-   - [${vars.section2}]
-3. 개조식 계층: 1,2,3 → 가,나,다 → -(대시)
-4. 명사형 어미(~함, ~임, ~함에 따름)로 간결·전문적으로
-5. 규칙:
-   - 마크다운 기호(###, **, __) 절대 금지
-   - 주요 항목 사이 빈 줄 하나
-   - 근거 없으면 빈 섹션으로 둘 것(추측 금지)`;
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[필수 출력 양식]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+■ ${vars.type} ${titleLabel} (${dateStr})
+
+[${vars.section1}]
+1. 첫 번째 안건 제목
+  가. 세부 논의 내용
+    - 구체적 사항
+  나. 결정 사항
+2. 두 번째 안건 제목
+  가. 세부 내용
+
+[${vars.section2}]
+1. 전달 항목
+  가. 세부 내용
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[작성 규칙 — 반드시 준수]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. 구조
+   - 반드시 [${vars.section1}]과 [${vars.section2}] 두 섹션으로 구분
+   - 해당 내용이 없는 섹션은 생략 가능
+   - 안건이 여러 개면 각각 번호를 매겨 분리
+
+2. 번호 체계 (개조식 3단계)
+   - 1단계: 1. 2. 3. (아라비아 숫자 + 마침표)
+   - 2단계: 가. 나. 다. (한글 가나다 + 마침표, 2칸 들여쓰기)
+   - 3단계: - (대시, 4칸 들여쓰기)
+
+3. 문체
+   - 명사형 어미 사용: ~함, ~임, ~됨, ~있음, ~예정임, ~필요함
+   - 예) "급식 메뉴를 다양화하기로 결정함"
+   - 예) "학부모 의견 수렴이 필요함"
+   - 구어체·대화체 금지, 간결한 공문서체 사용
+
+4. 요약 규칙
+   - 핵심 결정사항·논의사항 위주로 요약 (장황한 설명 제거)
+   - 날짜·담당자·기한 등 구체적 정보는 반드시 포함
+   - "~에 대해 논의함" 같은 모호한 표현 대신 구체적 결정 내용 기재
+   - 같은 안건의 관련 내용은 하나의 번호 아래 묶기
+
+5. 금지 사항
+   - 마크다운 기호(###, **, __, ```) 절대 금지
+   - 제공되지 않은 정보 추측·추가 절대 금지
+   - 불필요한 인사말·맺음말 금지
+   - 같은 내용 반복 금지`;
 
   const user = `[회의 내용]${agendaInfo}\n${text}`;
 
   return { system, user };
 }
 
-/* ── 날짜 포맷: YYYY-MM-DD → 2026. 5. 29. ── */
 function formatDate(iso) {
   if (!iso) return '';
   const [y, m, d] = iso.split('-').map(Number);

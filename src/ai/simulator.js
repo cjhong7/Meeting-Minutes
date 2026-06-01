@@ -164,24 +164,35 @@ function convertVerb(text) {
   if (!text) return text;
 
   // 이미 명사형 어미면 그대로
-  if (/[함임됨됨됨볼필예정취][\s.]*$/.test(text)) return text;
+  if (/[함임됨음정][\s.]*$/.test(text)) return text;
   // 물음표·느낌표 문장은 그대로
   if (/[?!？！]$/.test(text)) return text;
   // 인용·따옴표 포함 시 그대로
   if (/["'"']/.test(text)) return text;
 
-  // 동사 어미 변환 (매우 보수적)
+  // 동사 어미 변환
   return text
+    .replace(/합니다\.?$/, '함')
+    .replace(/했습니다\.?$/, '했음')
+    .replace(/됩니다\.?$/, '됨')
+    .replace(/있습니다\.?$/, '있음')
+    .replace(/없습니다\.?$/, '없음')
+    .replace(/입니다\.?$/, '임')
+    .replace(/습니다\.?$/, '음')
     .replace(/한다\.?$/, '함')
     .replace(/했다\.?$/, '했음')
-    .replace(/한다\.?$/, '함')
     .replace(/이다\.?$/, '임')
     .replace(/있다\.?$/, '있음')
     .replace(/없다\.?$/, '없음')
     .replace(/된다\.?$/, '됨')
-    .replace(/한다\.?$/, '함')
     .replace(/예정이다\.?$/, '예정임')
+    .replace(/예정입니다\.?$/, '예정임')
     .replace(/필요하다\.?$/, '필요함')
+    .replace(/필요합니다\.?$/, '필요함')
+    .replace(/하겠다\.?$/, '할 예정임')
+    .replace(/하겠습니다\.?$/, '할 예정임')
+    .replace(/바란다\.?$/, '바람')
+    .replace(/바랍니다\.?$/, '바람')
     .replace(/\.$/, '');  // 마지막 마침표 제거
 }
 
