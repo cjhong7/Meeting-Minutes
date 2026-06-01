@@ -554,7 +554,7 @@ function bindAiSettingsModal() {
   document.getElementById('btnSaveAiSettings')?.addEventListener('click', saveAiSettings);
 }
 
-function syncAiSettingsModal() {
+async function syncAiSettingsModal() {
   // 현재 설정 → 모달 UI 반영
   const engine = appState.aiEngine;
   const radios = document.querySelectorAll('.engine-radio');
@@ -567,6 +567,43 @@ function syncAiSettingsModal() {
 
   // 월별 사용량 표시
   updateUsageDisplay();
+
+  // 키/PIN 저장 상태 표시
+  try {
+    const { hasKey, needsPin } = await import('./crypto/keystore.js');
+    const engineMap = { openai: 'Openai', gemini: 'Gemini', claude: 'Claude' };
+    for (const [eng, label] of Object.entries(engineMap)) {
+      const saved  = await hasKey(eng);
+      const pinSet = saved && await needsPin(eng);
+      const badge  = document.getElementById(`keyStatus${label}`);
+      if (badge) {
+        if (saved && pinSet)  { badge.textContent = '✅ 저장됨 🔒 PIN설정'; badge.className = 'key-saved-badge key-badge-ok'; }
+        else if (saved)       { badge.textContent = '✅ 저장됨';             badge.className = 'key-saved-badge key-badge-ok'; }
+        else                  { badge.textContent = '';                       badge.className = 'key-saved-badge'; }
+
+        // 키가 저장된 경우 placeholder 변경
+        const input = document.getElementById(`in${label}Key`);
+        if (input) {
+          input.placeholder = saved
+            ? '저장된 키 있음 — 변경하려면 새 키 입력'
+            : { Openai: 'sk-...', Gemini: 'AIzaSy...', Claude: 'sk-ant-...' }[label];
+        }
+      }
+    }
+
+    // PIN 상태
+    const pinBadge = document.getElementById('pinStatus');
+    // 현재 선택 엔진에 PIN이 있는지 확인
+    if (pinBadge && engine !== 'sim') {
+      const pinSet = await needsPin(engine);
+      pinBadge.textContent  = pinSet ? '🔒 PIN 설정되어 있음' : '';
+      pinBadge.className    = pinSet ? 'key-saved-badge key-badge-pin' : 'key-saved-badge';
+      const pinInput = document.getElementById('inPin');
+      if (pinInput) pinInput.placeholder = pinSet ? 'PIN 변경하려면 새 PIN 입력' : '숫자 4~8자리';
+    }
+  } catch (e) {
+    console.warn('[Settings] 키 상태 확인 실패:', e);
+  }
 }
 
 /** 월별 토큰 사용량 → 예상 비용 표시 */

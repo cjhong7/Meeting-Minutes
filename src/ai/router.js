@@ -59,7 +59,7 @@ export async function generate({ text, mode, title, date, agendas }) {
   }
 
   // ── API 키 가져오기 ──
-  const apiKey = getApiKey(engine);
+  const apiKey = await getApiKey(engine);
   if (!apiKey) {
     throw new Error(
       `${engineLabel(engine)} API 키가 설정되지 않았습니다.\n` +
@@ -102,9 +102,25 @@ export async function generate({ text, mode, title, date, agendas }) {
    내부 헬퍼
    ================================================================ */
 
-/** sessionStorage에서 API 키 가져오기 (Stage 4에서 keystore.js로 교체) */
-function getApiKey(engine) {
-  return sessionStorage.getItem(`anti_key_${engine}`) || '';
+/**
+ * API 키 가져오기 — sessionStorage 캐시 우선, 없으면 IndexedDB에서 복원
+ * 탭을 닫았다 열어도 IndexedDB에 저장된 키를 자동으로 불러옴
+ */
+async function getApiKey(engine) {
+  // 1. sessionStorage 캐시 확인 (가장 빠름)
+  const cached = sessionStorage.getItem(`anti_key_${engine}`);
+  if (cached) return cached;
+
+  // 2. IndexedDB에서 복원 시도 (PIN 없는 키만 자동 복원)
+  try {
+    const { loadKey, needsPin } = await import('../crypto/keystore.js');
+    const pinRequired = await needsPin(engine);
+    if (!pinRequired) {
+      const key = await loadKey(engine, '');
+      return key || '';
+    }
+  } catch {}
+  return '';
 }
 
 /** 엔진 한글 레이블 */

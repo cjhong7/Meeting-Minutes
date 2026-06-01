@@ -451,6 +451,7 @@
         <div class="form-field engine-key-field" id="fieldOpenaiKey" hidden>
           <label class="field-label" for="inOpenaiKey">
             OpenAI API Key <small class="key-hint">(sk-...)</small>
+            <span class="key-saved-badge" id="keyStatusOpenai"></span>
           </label>
           <div class="key-row">
             <input class="field-input" id="inOpenaiKey" type="password"
@@ -463,6 +464,7 @@
         <div class="form-field engine-key-field" id="fieldGeminiKey" hidden>
           <label class="field-label" for="inGeminiKey">
             Gemini API Key <small class="key-hint">(AIzaSy...)</small>
+            <span class="key-saved-badge" id="keyStatusGemini"></span>
           </label>
           <div class="key-row">
             <input class="field-input" id="inGeminiKey" type="password"
@@ -475,6 +477,7 @@
         <div class="form-field engine-key-field" id="fieldClaudeKey" hidden>
           <label class="field-label" for="inClaudeKey">
             Claude API Key <small class="key-hint">(sk-ant-...)</small>
+            <span class="key-saved-badge" id="keyStatusClaude"></span>
           </label>
           <div class="key-row">
             <input class="field-input" id="inClaudeKey" type="password"
@@ -487,6 +490,7 @@
         <div class="form-field" id="fieldPin" hidden>
           <label class="field-label" for="inPin">
             키 잠금 PIN <small class="key-hint">(선택 · 공용 PC 권장)</small>
+            <span class="key-saved-badge" id="pinStatus"></span>
           </label>
           <input class="field-input" id="inPin" type="password"
             placeholder="숫자 4~8자리" maxlength="8" autocomplete="off">
