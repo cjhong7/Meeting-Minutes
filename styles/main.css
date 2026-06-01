@@ -510,8 +510,10 @@ a { color: var(--blue); }
 
 .rec-controls { display: flex; gap: 10px; justify-content: center; margin-bottom: 10px; }
 
-.file-stt-controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 10px; }
-.stt-progress { font-size: 13px; color: var(--blue); font-weight: 600; }
+.file-stt-controls { margin-top: 10px; }
+.stt-engine-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.stt-engine-select { flex: 1; min-width: 160px; max-width: 240px; font-size: 13px; }
+.stt-progress { display: block; font-size: 13px; color: var(--blue); font-weight: 600; margin-top: 6px; }
 
 .voice-transcript { min-height: 120px; }
 

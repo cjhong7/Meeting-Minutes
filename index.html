@@ -187,9 +187,15 @@
               <button class="btn btn-xs btn-ghost" id="btnRemoveAttached" type="button">제거</button>
             </div>
             <div class="file-stt-controls" id="fileSttControls" hidden>
-              <button class="btn btn-primary" id="btnFileToText" type="button">텍스트 변환 (Whisper STT)</button>
+              <div class="stt-engine-row">
+                <select class="field-input stt-engine-select" id="selSttEngine">
+                  <option value="whisper">Whisper (OpenAI 키)</option>
+                  <option value="gemini">Gemini 오디오 (Gemini 키)</option>
+                </select>
+                <button class="btn btn-primary" id="btnFileToText" type="button">텍스트 변환</button>
+              </div>
               <span class="stt-progress" id="sttProgress"></span>
-              <p class="hint-text">OpenAI API 키가 필요합니다. 키 없으면 아래 텍스트 영역에 직접 입력하세요.</p>
+              <p class="hint-text" id="sttHintText">OpenAI 또는 Gemini API 키가 필요합니다. 키 없으면 아래 텍스트 영역에 직접 입력하세요.</p>
             </div>
           </div>
 

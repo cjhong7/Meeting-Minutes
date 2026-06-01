@@ -344,7 +344,7 @@ function bindFileAttach() {
   });
 
   // 텍스트 변환 버튼
-  document.getElementById('btnFileToText')?.addEventListener('click', runWhisperStt);
+  document.getElementById('btnFileToText')?.addEventListener('click', runFileStt);
 }
 
 function handleAudioFile(file) {
@@ -361,23 +361,25 @@ function handleAudioFile(file) {
   }
 }
 
-/* ── Whisper STT 변환 ── */
-async function runWhisperStt() {
+/* ── 파일 STT 변환 (엔진 선택) ── */
+async function runFileStt() {
   if (!attachedAudioFile) {
     showToast('첨부된 오디오 파일이 없습니다.', 'warn');
     return;
   }
 
-  // OpenAI 키 확인 (Whisper는 OpenAI 전용)
-  let apiKey = sessionStorage.getItem('anti_key_openai') || '';
-  if (!apiKey) {
-    try {
-      const { loadKey, needsPin } = await import('../crypto/keystore.js');
-      const pinRequired = await needsPin('openai');
-      if (!pinRequired) apiKey = await loadKey('openai', '');
-    } catch {}
-  }
+  const sttEngine = document.getElementById('selSttEngine')?.value || 'whisper';
 
+  if (sttEngine === 'whisper') {
+    await runWhisperStt();
+  } else if (sttEngine === 'gemini') {
+    await runGeminiStt();
+  }
+}
+
+/* ── Whisper STT ── */
+async function runWhisperStt() {
+  const apiKey = await getKeyFor('openai');
   if (!apiKey) {
     showToast('Whisper STT에는 OpenAI API 키가 필요합니다.\n⚙ AI 설정에서 OpenAI 키를 입력해 주세요.', 'error');
     return;
@@ -387,32 +389,113 @@ async function runWhisperStt() {
   const progress = document.getElementById('sttProgress');
   const ta       = document.getElementById('voiceTranscript');
 
-  // UI 상태 변경
   if (btn) { btn.disabled = true; btn.textContent = '변환 중…'; }
   if (progress) progress.textContent = '오디오 전송 중…';
 
   try {
     const file = attachedAudioFile;
-
-    // 25MB 이하: 직접 전송
-    if (file.size <= 25 * 1024 * 1024) {
-      if (progress) progress.textContent = `Whisper로 전송 중… (${(file.size / 1024 / 1024).toFixed(1)}MB)`;
-      const text = await callWhisper(file, apiKey);
-      if (ta) ta.value = text;
-      setState({ meeting: { voiceTranscript: text, isDirty: true } });
-      updateCharCount();
-      showToast('텍스트 변환 완료!', 'success');
-    } else {
-      // 25MB 초과: 경고만 (ffmpeg.wasm 분할은 추후)
-      showToast('25MB 초과 파일은 현재 지원하지 않습니다. 파일을 분할하거나 짧게 녹음해 주세요.', 'warn');
+    if (file.size > 25 * 1024 * 1024) {
+      showToast('Whisper는 25MB 이하만 지원합니다. Gemini 오디오를 사용하거나 파일을 분할해 주세요.', 'warn');
+      return;
     }
+    if (progress) progress.textContent = `Whisper로 전송 중… (${(file.size / 1024 / 1024).toFixed(1)}MB)`;
+    const text = await callWhisper(file, apiKey);
+    if (ta) ta.value = text;
+    setState({ meeting: { voiceTranscript: text, isDirty: true } });
+    updateCharCount();
+    showToast('텍스트 변환 완료!', 'success');
   } catch (err) {
     console.error('[Whisper]', err);
     showToast(`변환 실패: ${err.message}`, 'error');
   } finally {
-    if (btn) { btn.disabled = false; btn.textContent = '텍스트 변환 (Whisper STT)'; }
+    if (btn) { btn.disabled = false; btn.textContent = '텍스트 변환'; }
     if (progress) progress.textContent = '';
   }
+}
+
+/* ── Gemini 오디오 STT ── */
+async function runGeminiStt() {
+  const apiKey = await getKeyFor('gemini');
+  if (!apiKey) {
+    showToast('Gemini STT에는 Gemini API 키가 필요합니다.\n⚙ AI 설정에서 Gemini 키를 입력해 주세요.', 'error');
+    return;
+  }
+
+  const btn      = document.getElementById('btnFileToText');
+  const progress = document.getElementById('sttProgress');
+  const ta       = document.getElementById('voiceTranscript');
+
+  if (btn) { btn.disabled = true; btn.textContent = '변환 중…'; }
+  if (progress) progress.textContent = 'Gemini로 오디오 전송 중…';
+
+  try {
+    const file = attachedAudioFile;
+    if (progress) progress.textContent = `Gemini 오디오 분석 중… (${(file.size / 1024 / 1024).toFixed(1)}MB)`;
+
+    // 오디오 파일 → base64
+    const arrayBuffer = await file.arrayBuffer();
+    const base64 = btoa(
+      new Uint8Array(arrayBuffer).reduce((data, byte) => data + String.fromCharCode(byte), '')
+    );
+
+    // MIME 타입 결정
+    const mimeMap = { mp3: 'audio/mp3', m4a: 'audio/mp4', wav: 'audio/wav', webm: 'audio/webm', ogg: 'audio/ogg' };
+    const ext = file.name.split('.').pop().toLowerCase();
+    const mimeType = mimeMap[ext] || file.type || 'audio/webm';
+
+    // Gemini 모델 선택 (저장된 모델 또는 기본)
+    const model = localStorage.getItem('anti_model_gemini') || 'gemini-2.5-flash';
+    const base  = model.includes('2.0') ? 'https://generativelanguage.googleapis.com/v1/models'
+                                        : 'https://generativelanguage.googleapis.com/v1beta/models';
+
+    const res = await fetch(`${base}/${model}:generateContent?key=${apiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{
+          parts: [
+            { text: '이 오디오 파일의 모든 음성을 한국어 텍스트로 정확하게 받아쓰기 해주세요. 말한 내용을 빠짐없이 그대로 텍스트로 변환하세요.' },
+            { inline_data: { mime_type: mimeType, data: base64 } },
+          ],
+        }],
+        generationConfig: { temperature: 0.1, maxOutputTokens: 8192 },
+      }),
+    });
+
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.error?.message || `Gemini 오류 (${res.status})`);
+    }
+
+    const data = await res.json();
+    const text = data.candidates?.[0]?.content?.parts?.map(p => p.text).join('') || '';
+
+    if (!text.trim()) throw new Error('Gemini 응답이 비어있습니다.');
+
+    if (ta) ta.value = text;
+    setState({ meeting: { voiceTranscript: text, isDirty: true } });
+    updateCharCount();
+    showToast('텍스트 변환 완료!', 'success');
+  } catch (err) {
+    console.error('[Gemini STT]', err);
+    showToast(`변환 실패: ${err.message}`, 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '텍스트 변환'; }
+    if (progress) progress.textContent = '';
+  }
+}
+
+/* ── API 키 가져오기 헬퍼 ── */
+async function getKeyFor(engine) {
+  let key = sessionStorage.getItem(`anti_key_${engine}`) || '';
+  if (!key) {
+    try {
+      const { loadKey, needsPin } = await import('../crypto/keystore.js');
+      const pinRequired = await needsPin(engine);
+      if (!pinRequired) key = await loadKey(engine, '');
+    } catch {}
+  }
+  return key;
 }
 
 /** Whisper API 호출 */
