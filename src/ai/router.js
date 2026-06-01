@@ -29,8 +29,8 @@ const MODEL_MAP = {
     high: 'gpt-4o',
   },
   gemini: {
-    low:  'gemini-2.0-flash',
-    high: 'gemini-2.0-pro-exp-03-25',
+    low:  'gemini-1.5-flash',
+    high: 'gemini-1.5-pro',
   },
   claude: {
     low:  'claude-haiku-4-20250414',

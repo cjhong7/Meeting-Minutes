@@ -259,7 +259,7 @@ async function ocrWithOpenAI(base64, apiKey) {
 }
 
 async function ocrWithGemini(base64, apiKey) {
-  const model = appState.aiQuality === 'high' ? 'gemini-2.0-pro-exp-03-25' : 'gemini-2.0-flash';
+  const model = appState.aiQuality === 'high' ? 'gemini-1.5-pro' : 'gemini-1.5-flash';
   const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
