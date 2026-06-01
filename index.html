@@ -207,9 +207,10 @@
             <input type="file" id="planFileInput" accept=".hwpx,.pdf,.docx" multiple hidden>
           </div>
           <div class="plan-file-list" id="planFileList" hidden></div>
-          <div class="plan-extract-area" id="planExtractArea" hidden>
-            <label class="field-label">추출된 텍스트 <small>(편집 가능)</small></label>
-            <textarea class="typing-area plan-textarea" id="planExtractText" placeholder="파일에서 추출된 텍스트가 여기에 표시됩니다…"></textarea>
+          <div class="plan-extract-area" id="planExtractArea">
+            <label class="field-label">계획서 내용 <small>(파일 업로드 후 자동 입력 · 직접 붙여넣기도 가능)</small></label>
+            <textarea class="typing-area plan-textarea" id="planExtractText" placeholder="파일을 업로드하면 텍스트가 자동으로 추출됩니다.
+직접 계획서 내용을 붙여넣거나 입력해도 됩니다."></textarea>
             <div class="typing-footer">
               <span class="char-count" id="planCharCount">0자</span>
             </div>

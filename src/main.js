@@ -260,6 +260,8 @@ function bindModeSwitch() {
       updateGenerateHint();
       // 녹음 모드 진입 시 마이크 권한 확인 + 버튼 활성화
       if (mode === 'voice') activateVoiceMode();
+      // 계획서 모드 진입 시 state → textarea 동기화
+      if (mode === 'plan') syncPlanTextarea();
     });
   });
 }
@@ -308,6 +310,13 @@ function bindToolbar() {
     const ta = document.getElementById('typingText');
     if (ta) ta.value = '';
     document.getElementById('typingCharCount') && (document.getElementById('typingCharCount').textContent = '0자');
+
+    // 계획서 영역 초기화
+    const planTa = document.getElementById('planExtractText');
+    if (planTa) planTa.value = '';
+    document.getElementById('planCharCount') && (document.getElementById('planCharCount').textContent = '0자');
+    document.getElementById('planFileList') && (document.getElementById('planFileList').innerHTML = '');
+    document.getElementById('planFileList') && (document.getElementById('planFileList').hidden = true);
 
     showToast('새 협의록 작성을 시작합니다.', 'success');
   });
@@ -855,6 +864,19 @@ function bindArchiveSearch() {
       renderArchiveList(input.value);
     }, 300);
   });
+}
+
+/** 계획서 모드 진입 시 state.planExtractedText → textarea 동기화 */
+function syncPlanTextarea() {
+  const ta = document.getElementById('planExtractText');
+  if (!ta) return;
+  const stateText = appState.meeting.planExtractedText || '';
+  if (ta.value !== stateText) {
+    ta.value = stateText;
+    // 글자 수 갱신
+    const cc = document.getElementById('planCharCount');
+    if (cc) cc.textContent = stateText.length + '자';
+  }
 }
 
 /** HTML 이스케이프 (보관함 렌더링용) */
