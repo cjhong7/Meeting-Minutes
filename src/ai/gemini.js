@@ -24,17 +24,16 @@ export async function callGemini({ system, user, model, apiKey }) {
   if (!apiKey) throw new Error('Gemini API 키가 설정되지 않았습니다.');
 
   // 2.0 모델은 v1, 2.5+ 모델은 v1beta 사용
-  const base = model.includes('2.0') ? BASE_URL_V1 : BASE_URL;
+  const useV1 = model.includes('2.0');
+  const base = useV1 ? BASE_URL_V1 : BASE_URL;
   const endpoint = `${base}/${model}:generateContent?key=${apiKey}`;
 
+  // v1은 systemInstruction 미지원 → 시스템 메시지를 사용자 메시지에 합침
   const body = {
-    systemInstruction: {
-      parts: [{ text: system }],
-    },
     contents: [
       {
         role: 'user',
-        parts: [{ text: user }],
+        parts: [{ text: useV1 ? `${system}\n\n${user}` : user }],
       },
     ],
     generationConfig: {
@@ -42,6 +41,11 @@ export async function callGemini({ system, user, model, apiKey }) {
       maxOutputTokens: 4096,
     },
   };
+
+  // v1beta만 systemInstruction 지원
+  if (!useV1) {
+    body.systemInstruction = { parts: [{ text: system }] };
+  }
 
   const response = await fetch(endpoint, {
     method: 'POST',
