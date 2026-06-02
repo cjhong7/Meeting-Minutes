@@ -26,6 +26,10 @@ export async function callGemini({ system, user, model, apiKey }) {
   // 모든 2.0/2.5 모델은 v1beta + systemInstruction 지원
   const endpoint = `${BASE_URL}/${model}:generateContent?key=${apiKey}`;
 
+  // 2.5-pro는 추론(thinking) 모델 → 추론 토큰이 출력 한도를 소모하므로 한도를 크게 설정
+  const isThinking = model.includes('2.5-pro') || model.includes('2.5-flash');
+  const maxTokens  = isThinking ? 8192 : 3500;
+
   const body = {
     systemInstruction: { parts: [{ text: system }] },
     contents: [
@@ -36,9 +40,14 @@ export async function callGemini({ system, user, model, apiKey }) {
     ],
     generationConfig: {
       temperature: 0.4,
-      maxOutputTokens: 3500,
+      maxOutputTokens: maxTokens,
     },
   };
+
+  // 2.5-flash는 thinking을 낮춰 답변 토큰 확보 (flash는 빠른 응답 우선)
+  if (model.includes('2.5-flash')) {
+    body.generationConfig.thinkingConfig = { thinkingBudget: 0 };
+  }
 
   const response = await fetch(endpoint, {
     method: 'POST',
@@ -76,7 +85,13 @@ export async function callGemini({ system, user, model, apiKey }) {
     .join('') || '';
 
   if (!text.trim()) {
-    throw new Error('Gemini 응답이 비어있습니다.');
+    if (candidate.finishReason === 'MAX_TOKENS') {
+      throw new Error('응답 생성 한도를 초과했습니다. gemini-2.5-flash 모델을 사용하거나 입력 내용을 줄여 주세요.');
+    }
+    if (candidate.finishReason === 'RECITATION') {
+      throw new Error('Gemini가 저작권 우려로 응답을 중단했습니다. 입력 내용을 수정해 주세요.');
+    }
+    throw new Error(`Gemini 응답이 비어있습니다. (사유: ${candidate.finishReason || '알 수 없음'})`);
   }
 
   // 토큰 사용량
