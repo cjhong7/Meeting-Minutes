@@ -42,12 +42,11 @@ export async function callGemini({ system, user, model, apiKey }) {
 
   // ── 모델별 추론(thinking) 제어 ──
   if (model.includes('2.5-pro')) {
-    // pro: 고품질·상세 — 추론은 적당히 제한하여 답변 분량 충분히 확보
+    // pro: 고품질·상세 — 추론 적당히, 답변 분량 넉넉히
     body.generationConfig.thinkingConfig = { thinkingBudget: 1024 };
   } else if (model.includes('2.5-flash')) {
-    // flash: 가볍게·빠르게 — 추론 최소화, 답변 한도도 작게
-    body.generationConfig.thinkingConfig = { thinkingBudget: 0 };
-    body.generationConfig.maxOutputTokens = 3000;
+    // flash: 빠르되 상세하게 — 추론 최소화, 답변 한도는 크게
+    body.generationConfig.thinkingConfig = { thinkingBudget: 256 };
   }
 
   const response = await fetch(endpoint, {
