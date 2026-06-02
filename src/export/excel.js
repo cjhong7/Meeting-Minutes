@@ -299,6 +299,135 @@ export async function exportExcel() {
   }
 }
 
+/**
+ * 엑셀 Blob과 파일명을 생성하여 반환 (다운로드/폴더저장 공용)
+ * @returns {Promise<{ blob: Blob, fileName: string }|null>}
+ */
+export async function buildExcelBlob() {
+  const meeting = appState.meeting;
+  if (!meeting.minutes) return null;
+
+  await ensureExcelJS();
+  const title = meeting.title.trim() || '회의록';
+
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet('회의록');
+
+  const attendeeNames = meeting.attendeeNames || [];
+  const total = meeting.attendeeCount || attendeeNames.length || 6;
+  const actualRows = total >= 9 ? 2 : 1;
+  const slotsPerRow = actualRows === 1 ? Math.max(total, 6) : Math.ceil(total / 2);
+  const contentCols = slotsPerRow;
+  const totalCols   = contentCols + 1;
+
+  const cols = [{ width: 13 }];
+  const colWidth = 85 / contentCols;
+  for (let i = 0; i < contentCols; i++) cols.push({ width: colWidth });
+  ws.columns = cols;
+
+  ws.pageSetup = {
+    orientation: 'portrait', paperSize: 9, scale: 100,
+    margins: { left: 0.25, right: 0.25, top: 0.5, bottom: 0.5, header: 0.3, footer: 0.3 },
+  };
+
+  let currentRow = 1;
+
+  // 제목
+  ws.mergeCells(currentRow, 1, currentRow, totalCols);
+  const titleCell = ws.getCell(currentRow, 1);
+  titleCell.value = title;
+  titleCell.font = { bold: true, size: 16 };
+  titleCell.alignment = ALIGN_CENTER;
+  ws.getRow(currentRow).height = 45;
+  currentRow++;
+
+  // 일시 + 장소
+  const dateWidth  = Math.max(Math.ceil((contentCols - 1) * 0.65) - 1, 1);
+  ws.getCell(currentRow, 1).value = '일시';
+  ws.getCell(currentRow, 1).fill = FILL_HEADER;
+  ws.getCell(currentRow, 1).font = FONT_BOLD;
+  ws.mergeCells(currentRow, 2, currentRow, 2 + dateWidth - 1);
+  ws.getCell(currentRow, 2).value = formatDateForExcel(meeting.date, meeting.time);
+  const placeHeaderCol = 2 + dateWidth;
+  ws.getCell(currentRow, placeHeaderCol).value = '장소';
+  ws.getCell(currentRow, placeHeaderCol).fill = FILL_HEADER;
+  ws.getCell(currentRow, placeHeaderCol).font = FONT_BOLD;
+  ws.mergeCells(currentRow, placeHeaderCol + 1, currentRow, totalCols);
+  ws.getCell(currentRow, placeHeaderCol + 1).value = meeting.place || '';
+  ws.getRow(currentRow).height = 25;
+  currentRow++;
+
+  // 참석자
+  if (total > 0) {
+    const attRowSpan = actualRows * 2;
+    ws.mergeCells(currentRow, 1, currentRow + attRowSpan - 1, 1);
+    const attLabel = ws.getCell(currentRow, 1);
+    attLabel.value = '참석자'; attLabel.fill = FILL_HEADER; attLabel.font = FONT_BOLD;
+    attLabel.alignment = ALIGN_CENTER;
+    const defaultNames = ['교장','교감','부장','참석자','참석자','참석자','참석자','참석자','참석자','참석자','참석자','참석자','참석자','참석자','참석자','참석자'];
+    for (let r = 0; r < actualRows; r++) {
+      const nameRow = currentRow, signRow = currentRow + 1;
+      ws.getRow(nameRow).height = 25;
+      ws.getRow(signRow).height = 45;
+      const startIndex = r * slotsPerRow;
+      for (let c = 0; c < slotsPerRow; c++) {
+        const idx = startIndex + c, colIdx = 2 + c;
+        const nameCell = ws.getCell(nameRow, colIdx), signCell = ws.getCell(signRow, colIdx);
+        if (idx < total) {
+          nameCell.value = (attendeeNames[idx] || '').trim() || defaultNames[idx] || '참석자';
+          nameCell.fill = FILL_HEADER; nameCell.font = FONT_BOLD; nameCell.alignment = ALIGN_CENTER;
+          signCell.value = '(서명)';
+          signCell.font = { color: { argb: 'FF94A3B8' }, italic: true, size: 10 };
+          signCell.alignment = ALIGN_CENTER;
+        } else {
+          nameCell.fill = FILL_HEADER; nameCell.alignment = ALIGN_CENTER; signCell.alignment = ALIGN_CENTER;
+        }
+      }
+      currentRow += 2;
+    }
+  }
+
+  // 안건
+  ws.mergeCells(currentRow, 2, currentRow, totalCols);
+  ws.getCell(currentRow, 1).value = '안건';
+  ws.getCell(currentRow, 1).fill = FILL_HEADER;
+  ws.getCell(currentRow, 1).font = FONT_BOLD;
+  ws.getCell(currentRow, 1).alignment = ALIGN_CENTER;
+  const agendaText = (meeting.agendas || []).filter(a => a.trim()).map((a, i) => `${i + 1}. ${a}`).join('\n') || '';
+  ws.getCell(currentRow, 2).value = agendaText;
+  ws.getCell(currentRow, 2).alignment = { vertical: 'middle', horizontal: 'left', wrapText: true };
+  const agendaCount = (meeting.agendas || []).filter(a => a.trim()).length;
+  ws.getRow(currentRow).height = Math.max(25, agendaCount * 20);
+  currentRow++;
+
+  // 회의내용
+  ws.mergeCells(currentRow, 2, currentRow, totalCols);
+  ws.getCell(currentRow, 1).value = '회의내용';
+  ws.getCell(currentRow, 1).fill = FILL_HEADER;
+  ws.getCell(currentRow, 1).font = FONT_BOLD;
+  ws.getCell(currentRow, 1).alignment = ALIGN_CENTER;
+  ws.getRow(currentRow).height = 400;
+  const contentCell = ws.getCell(currentRow, 2);
+  contentCell.value = meeting.minutes || '';
+  contentCell.alignment = { vertical: 'top', horizontal: 'left', wrapText: true };
+
+  // 테두리
+  for (let R = 1; R <= currentRow; R++) {
+    for (let C = 1; C <= totalCols; C++) {
+      const cell = ws.getCell(R, C);
+      cell.border = BORDER_THIN;
+      if (!cell.alignment && cell !== contentCell) cell.alignment = ALIGN_CENTER;
+    }
+  }
+
+  const buffer = await wb.xlsx.writeBuffer();
+  const blob = new Blob([buffer], {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  });
+  const fileName = `${title}_${meeting.date || ''}.xlsx`.replace(/[\\/:*?"<>|]/g, '_');
+  return { blob, fileName };
+}
+
 /* ── 날짜 포맷 헬퍼 ── */
 function formatDateForExcel(dateStr, timeStr) {
   if (!dateStr) return '';

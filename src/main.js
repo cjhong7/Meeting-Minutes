@@ -321,13 +321,14 @@ function bindToolbar() {
     showToast('새 협의록 작성을 시작합니다.', 'success');
   });
 
-  // 내 기기에 저장
+  // 보관함 폴더 지정 — 저장 위치 지정 창 + 보관함(IndexedDB) 저장
   document.getElementById('btnSave')?.addEventListener('click', async () => {
     if (!appState.meeting.minutes) {
       showToast('협의록을 먼저 생성해 주세요.', 'warn');
       return;
     }
-    // IndexedDB에 자동 저장
+
+    // 1. 보관함(IndexedDB)에 저장 (불러오기용)
     const { saveMeeting } = await import('./db/indexeddb.js');
     try {
       const saved = await saveMeeting(appState.meeting);
@@ -336,11 +337,22 @@ function bindToolbar() {
       console.error('[Save]', err);
       showToast(`보관함 저장 실패: ${err.message}`, 'error');
     }
-    // 파일 형식 선택 (엑셀/워드)
-    openModal('modalSaveLocation');
+
+    // 2. 엑셀 파일 생성 → 저장 위치 지정 창
+    try {
+      const { buildExcelBlob } = await import('./export/excel.js');
+      const { saveBlobToLocation } = await import('./db/backup.js');
+      const result = await buildExcelBlob();
+      if (result) {
+        await saveBlobToLocation(result.blob, result.fileName);
+      }
+    } catch (err) {
+      console.error('[SaveLocation]', err);
+      showToast(`파일 저장 실패: ${err.message}`, 'error');
+    }
   });
 
-  // 보관함
+  // 회의록 불러오기 — 보관함 목록
   document.getElementById('btnArchive')?.addEventListener('click', async () => {
     await renderArchiveList();
     openModal('modalArchive');
@@ -356,18 +368,6 @@ function bindToolbar() {
     await exportExcel();
   });
 
-  // 저장 형식 선택 — 엑셀
-  document.getElementById('btnSaveExcel')?.addEventListener('click', async () => {
-    const { exportExcel } = await import('./export/excel.js');
-    await exportExcel();
-    closeModal('modalSaveLocation');
-  });
-  // 저장 형식 선택 — 워드
-  document.getElementById('btnSaveWord')?.addEventListener('click', async () => {
-    const { exportWord } = await import('./export/word.js');
-    await exportWord();
-    closeModal('modalSaveLocation');
-  });
 }
 
 /** 협의록 생성 여부에 따라 버튼 활성/비활성 */

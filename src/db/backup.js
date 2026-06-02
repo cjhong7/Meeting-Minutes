@@ -18,6 +18,40 @@ export function isFileSystemAccessSupported() {
 }
 
 /**
+ * 저장 위치를 지정하는 창을 열어 엑셀 파일을 저장
+ * (showSaveFilePicker: 폴더 + 파일명 직접 지정)
+ * @param {Blob} blob       엑셀 Blob
+ * @param {string} fileName 기본 파일명
+ */
+export async function saveBlobToLocation(blob, fileName) {
+  // File System Access API (Chrome/Edge): 저장 위치 지정 창
+  if ('showSaveFilePicker' in window) {
+    try {
+      const handle = await window.showSaveFilePicker({
+        suggestedName: fileName,
+        types: [{
+          description: '엑셀 통합 문서',
+          accept: { 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'] },
+        }],
+      });
+      const writable = await handle.createWritable();
+      await writable.write(blob);
+      await writable.close();
+      showToast('지정한 위치에 저장되었습니다.', 'success');
+      return true;
+    } catch (err) {
+      if (err.name === 'AbortError') return false; // 사용자 취소
+      console.warn('[Save] 위치 지정 실패, 다운로드로 폴백:', err);
+    }
+  }
+
+  // 폴백: 일반 다운로드
+  downloadBlob(blob, fileName);
+  showToast('다운로드 폴더에 저장되었습니다.', 'success');
+  return true;
+}
+
+/**
  * 회의 데이터를 폴더에 JSON으로 저장
  *
  * @param {Object} meeting  회의 데이터 (appState.meeting 형태)
