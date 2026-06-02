@@ -32,11 +32,14 @@
       <button class="btn btn-ghost" id="btnNew" type="button">
         <span aria-hidden="true">＋</span> 새로작성
       </button>
+      <button class="btn btn-ghost" id="btnSetFolder" type="button">
+        <span aria-hidden="true">📁</span> 보관함 폴더 지정
+      </button>
       <button class="btn btn-ghost" id="btnSave" type="button" disabled>
-        <span aria-hidden="true">💾</span> 보관함 폴더 지정
+        <span aria-hidden="true">💾</span> 협의록 저장하기
       </button>
       <button class="btn btn-ghost" id="btnArchive" type="button">
-        <span aria-hidden="true">📂</span> 회의록 불러오기
+        <span aria-hidden="true">📂</span> 협의록 불러오기
       </button>
       <button class="btn btn-accent" id="btnExcel" type="button" disabled>
         <span aria-hidden="true">📊</span> 엑셀 다운로드
@@ -597,7 +600,7 @@
     role="dialog" aria-modal="true" aria-labelledby="dlgArchiveTitle">
     <div class="modal-box modal-lg">
       <div class="modal-header">
-        <h2 class="modal-title" id="dlgArchiveTitle">📂 보관함</h2>
+        <h2 class="modal-title" id="dlgArchiveTitle">📂 협의록 불러오기</h2>
         <button class="btn-icon modal-close" data-close="modalArchive"
           type="button" aria-label="닫기">✕</button>
       </div>

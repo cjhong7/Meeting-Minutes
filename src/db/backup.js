@@ -17,6 +17,122 @@ export function isFileSystemAccessSupported() {
   return 'showDirectoryPicker' in window;
 }
 
+/* ============================================================
+   보관함 폴더 지정 (저장 위치 기억)
+   ============================================================ */
+
+let _dirHandle = null;  // 세션 메모리 캐시
+
+const HANDLE_DB    = 'anti_conver_db';
+const HANDLE_STORE = 'settings';
+const HANDLE_KEY   = 'archive_dir_handle';
+
+/**
+ * 협의록을 저장할 폴더를 지정하고 기억 (다음 실행에도 유지)
+ * @returns {Promise<string|null>} 지정된 폴더 이름 (취소 시 null)
+ */
+export async function chooseArchiveFolder() {
+  if (!('showDirectoryPicker' in window)) {
+    showToast('이 브라우저는 폴더 지정을 지원하지 않습니다. (Chrome·Edge 권장)', 'warn');
+    return null;
+  }
+  try {
+    const handle = await window.showDirectoryPicker({ mode: 'readwrite' });
+    _dirHandle = handle;
+    await saveDirHandle(handle);
+    return handle.name;
+  } catch (err) {
+    if (err.name === 'AbortError') return null;
+    showToast('폴더 지정 실패: ' + err.message, 'error');
+    return null;
+  }
+}
+
+/**
+ * 지정된 폴더 핸들 반환 (권한 확인 포함). 없으면 null.
+ */
+export async function getArchiveFolder() {
+  if (_dirHandle && await verifyPermission(_dirHandle)) return _dirHandle;
+
+  const stored = await loadDirHandle();
+  if (stored && await verifyPermission(stored)) {
+    _dirHandle = stored;
+    return stored;
+  }
+  return null;
+}
+
+/** 현재 지정된 폴더 이름 (없으면 null) — 권한 요청 없이 조회 */
+export async function getArchiveFolderName() {
+  if (_dirHandle) return _dirHandle.name;
+  const stored = await loadDirHandle();
+  return stored ? stored.name : null;
+}
+
+/**
+ * 지정된 폴더에 파일(Blob) 저장
+ * @returns {Promise<boolean>} 성공 여부
+ */
+export async function saveBlobToArchiveFolder(blob, fileName) {
+  const dir = await getArchiveFolder();
+  if (!dir) return false;
+  const fileHandle = await dir.getFileHandle(fileName, { create: true });
+  const writable   = await fileHandle.createWritable();
+  await writable.write(blob);
+  await writable.close();
+  return true;
+}
+
+/* ── 권한 확인 ── */
+async function verifyPermission(handle) {
+  const opts = { mode: 'readwrite' };
+  try {
+    if ((await handle.queryPermission(opts)) === 'granted') return true;
+    if ((await handle.requestPermission(opts)) === 'granted') return true;
+  } catch { /* 핸들 무효 */ }
+  return false;
+}
+
+/* ── 디렉터리 핸들 IndexedDB 저장/로드 ── */
+function openHandleDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(HANDLE_DB, 1);
+    req.onupgradeneeded = e => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains('meetings')) {
+        const s = db.createObjectStore('meetings', { keyPath: 'id' });
+        s.createIndex('date', 'date', { unique: false });
+        s.createIndex('updatedAt', 'updatedAt', { unique: false });
+      }
+      if (!db.objectStoreNames.contains('settings')) {
+        db.createObjectStore('settings', { keyPath: 'key' });
+      }
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror   = () => reject(req.error);
+  });
+}
+
+async function saveDirHandle(handle) {
+  const db = await openHandleDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(HANDLE_STORE, 'readwrite');
+    tx.objectStore(HANDLE_STORE).put({ key: HANDLE_KEY, handle });
+    tx.oncomplete = () => { db.close(); resolve(); };
+    tx.onerror    = () => reject(tx.error);
+  });
+}
+
+async function loadDirHandle() {
+  const db = await openHandleDB();
+  return new Promise((resolve) => {
+    const tx  = db.transaction(HANDLE_STORE, 'readonly');
+    const req = tx.objectStore(HANDLE_STORE).get(HANDLE_KEY);
+    req.onsuccess = () => { db.close(); resolve(req.result?.handle || null); };
+    req.onerror   = () => { db.close(); resolve(null); };
+  });
+}
+
 /**
  * 저장 위치를 지정하는 창을 열어 엑셀 파일을 저장
  * (showSaveFilePicker: 폴더 + 파일명 직접 지정)

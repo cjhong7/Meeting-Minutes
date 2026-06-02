@@ -321,7 +321,16 @@ function bindToolbar() {
     showToast('새 협의록 작성을 시작합니다.', 'success');
   });
 
-  // 보관함 폴더 지정 — 저장 위치 지정 창 + 보관함(IndexedDB) 저장
+  // ① 보관함 폴더 지정 — 저장 위치만 설정(기억)
+  document.getElementById('btnSetFolder')?.addEventListener('click', async () => {
+    const { chooseArchiveFolder } = await import('./db/backup.js');
+    const folderName = await chooseArchiveFolder();
+    if (folderName) {
+      showToast(`저장 폴더가 지정되었습니다: ${folderName}`, 'success');
+    }
+  });
+
+  // ② 협의록 저장하기 — 현재 협의록을 보관함 + 지정 폴더에 저장
   document.getElementById('btnSave')?.addEventListener('click', async () => {
     if (!appState.meeting.minutes) {
       showToast('협의록을 먼저 생성해 주세요.', 'warn');
@@ -336,23 +345,33 @@ function bindToolbar() {
     } catch (err) {
       console.error('[Save]', err);
       showToast(`보관함 저장 실패: ${err.message}`, 'error');
+      return;
     }
 
-    // 2. 엑셀 파일 생성 → 저장 위치 지정 창
+    // 2. 엑셀 파일을 지정 폴더에 저장 (지정 폴더 없으면 위치 지정 창)
     try {
       const { buildExcelBlob } = await import('./export/excel.js');
-      const { saveBlobToLocation } = await import('./db/backup.js');
+      const { getArchiveFolder, saveBlobToArchiveFolder, saveBlobToLocation } = await import('./db/backup.js');
       const result = await buildExcelBlob();
-      if (result) {
+      if (!result) return;
+
+      const dir = await getArchiveFolder();
+      if (dir) {
+        // 지정된 폴더에 바로 저장
+        await saveBlobToArchiveFolder(result.blob, result.fileName);
+        showToast(`보관함 폴더에 저장되었습니다: ${result.fileName}`, 'success');
+      } else {
+        // 폴더 미지정 → 위치 지정 창
+        showToast('보관함 폴더가 지정되지 않아 저장 위치를 직접 선택합니다.', 'info');
         await saveBlobToLocation(result.blob, result.fileName);
       }
     } catch (err) {
-      console.error('[SaveLocation]', err);
+      console.error('[SaveFile]', err);
       showToast(`파일 저장 실패: ${err.message}`, 'error');
     }
   });
 
-  // 회의록 불러오기 — 보관함 목록
+  // ③ 협의록 불러오기 — 보관함 목록
   document.getElementById('btnArchive')?.addEventListener('click', async () => {
     await renderArchiveList();
     openModal('modalArchive');
