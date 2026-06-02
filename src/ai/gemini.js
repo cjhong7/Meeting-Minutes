@@ -35,8 +35,8 @@ export async function callGemini({ system, user, model, apiKey }) {
       },
     ],
     generationConfig: {
-      temperature: 0.6,        // 자연스러운 상세화 허용
-      maxOutputTokens: 8192,
+      temperature: 0.6,         // 자연스러운 상세화 허용
+      maxOutputTokens: 16384,   // 긴 협의록 확보 (추론 + 답변)
     },
   };
 
