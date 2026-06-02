@@ -26,7 +26,7 @@ export async function callClaude({ system, user, model, apiKey }) {
 
   const body = {
     model,
-    max_tokens: 4096,
+    max_tokens: 2048,
     system,
     messages: [
       { role: 'user', content: user },
