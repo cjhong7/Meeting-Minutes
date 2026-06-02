@@ -332,12 +332,11 @@ function bindToolbar() {
     try {
       const saved = await saveMeeting(appState.meeting);
       setState({ meeting: { id: saved.id, createdAt: saved.createdAt, updatedAt: saved.updatedAt, isDirty: false } });
-      showToast('보관함에 저장되었습니다.', 'success');
     } catch (err) {
       console.error('[Save]', err);
-      showToast(`저장 실패: ${err.message}`, 'error');
+      showToast(`보관함 저장 실패: ${err.message}`, 'error');
     }
-    // 추가로 파일 저장 위치 선택
+    // 파일 형식 선택 (엑셀/워드)
     openModal('modalSaveLocation');
   });
 
@@ -357,20 +356,16 @@ function bindToolbar() {
     await exportExcel();
   });
 
-  // 저장 위치 선택
-  document.getElementById('btnSaveLocal')?.addEventListener('click', async () => {
-    const { saveToFolder } = await import('./db/backup.js');
-    await saveToFolder(appState.meeting, 'local');
+  // 저장 형식 선택 — 엑셀
+  document.getElementById('btnSaveExcel')?.addEventListener('click', async () => {
+    const { exportExcel } = await import('./export/excel.js');
+    await exportExcel();
     closeModal('modalSaveLocation');
   });
-  document.getElementById('btnSaveDrive')?.addEventListener('click', async () => {
-    const { saveToFolder } = await import('./db/backup.js');
-    await saveToFolder(appState.meeting, 'drive');
-    closeModal('modalSaveLocation');
-  });
-  document.getElementById('btnSaveOneDrive')?.addEventListener('click', async () => {
-    const { saveToFolder } = await import('./db/backup.js');
-    await saveToFolder(appState.meeting, 'onedrive');
+  // 저장 형식 선택 — 워드
+  document.getElementById('btnSaveWord')?.addEventListener('click', async () => {
+    const { exportWord } = await import('./export/word.js');
+    await exportWord();
     closeModal('modalSaveLocation');
   });
 }

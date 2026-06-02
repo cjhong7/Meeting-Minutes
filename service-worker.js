@@ -20,7 +20,7 @@
  *  - 펜 OCR
  */
 
-const CACHE_NAME = 'anti-conver-v22';
+const CACHE_NAME = 'anti-conver-v23';
 
 /* 앱 셸 사전 캐시 목록 */
 const SHELL_FILES = [
@@ -50,6 +50,7 @@ const SHELL_FILES = [
   './src/db/opfs.js',
   './src/db/backup.js',
   './src/export/excel.js',
+  './src/export/word.js',
   './src/export/print.js',
   './icons/icon.svg',
   './manifest.webmanifest',

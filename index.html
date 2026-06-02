@@ -615,40 +615,33 @@
     </div>
   </div>
 
-  <!-- 저장 위치 선택 모달 -->
+  <!-- 저장 형식 선택 모달 -->
   <div class="modal-overlay" id="modalSaveLocation" hidden
     role="dialog" aria-modal="true" aria-labelledby="dlgSaveTitle">
     <div class="modal-box modal-sm">
       <div class="modal-header">
-        <h2 class="modal-title" id="dlgSaveTitle">💾 저장 위치 선택</h2>
+        <h2 class="modal-title" id="dlgSaveTitle">💾 파일로 저장</h2>
         <button class="btn-icon modal-close" data-close="modalSaveLocation"
           type="button" aria-label="닫기">✕</button>
       </div>
       <div class="modal-body">
         <div class="save-options">
-          <button class="save-option" id="btnSaveLocal" type="button">
-            <span class="save-option-icon" aria-hidden="true">💾</span>
+          <button class="save-option" id="btnSaveExcel" type="button">
+            <span class="save-option-icon" aria-hidden="true">📊</span>
             <span class="save-option-text">
-              <strong>내 컴퓨터 폴더</strong>
-              <small>파일 선택기로 저장 위치 직접 지정</small>
+              <strong>엑셀 (.xlsx)</strong>
+              <small>학교 협의록 표 양식 그대로 저장 (편집·인쇄 편리)</small>
             </span>
           </button>
-          <button class="save-option" id="btnSaveDrive" type="button">
-            <span class="save-option-icon" aria-hidden="true">🟢</span>
+          <button class="save-option" id="btnSaveWord" type="button">
+            <span class="save-option-icon" aria-hidden="true">📄</span>
             <span class="save-option-text">
-              <strong>Google Drive 동기화 폴더</strong>
-              <small>PC의 Drive 폴더에 저장 → 자동 클라우드 업로드</small>
-            </span>
-          </button>
-          <button class="save-option" id="btnSaveOneDrive" type="button">
-            <span class="save-option-icon" aria-hidden="true">🔵</span>
-            <span class="save-option-text">
-              <strong>OneDrive 동기화 폴더</strong>
-              <small>PC의 OneDrive 폴더에 저장 → 자동 클라우드 업로드</small>
+              <strong>워드 (.doc)</strong>
+              <small>한글(HWP)·MS워드에서 열어 편집 가능</small>
             </span>
           </button>
         </div>
-        <p class="hint-text">※ 클라우드 저장은 PC에 설치된 동기화 앱 폴더에 저장합니다. 별도 로그인 불필요.</p>
+        <p class="hint-text">※ 다운로드 후 Google Drive·OneDrive 동기화 폴더에 옮기면 자동으로 클라우드 백업됩니다.</p>
       </div>
     </div>
   </div>
