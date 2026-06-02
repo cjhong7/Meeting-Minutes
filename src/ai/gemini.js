@@ -36,19 +36,19 @@ export async function callGemini({ system, user, model, apiKey }) {
     ],
     generationConfig: {
       temperature: 0.6,         // 자연스러운 상세화 허용
-      maxOutputTokens: 9000,    // 협의록 확보 (추론 + 답변)
+      maxOutputTokens: 5000,    // 협의록 확보 (추론 + 답변)
     },
   };
 
   // ── 모델별 차별화 ──
   if (model.includes('2.5-pro')) {
-    // pro: 깊은 추론으로 더 풍부·정교하게
-    body.generationConfig.thinkingConfig = { thinkingBudget: 2048 };
+    // pro: 깊은 추론으로 정교하게 (답변 토큰 확보 위해 추론 적당히)
+    body.generationConfig.thinkingConfig = { thinkingBudget: 1024 };
     body.generationConfig.temperature = 0.7;
   } else if (model.includes('2.5-flash')) {
-    // flash: 가벼운 추론으로 빠르게
-    body.generationConfig.thinkingConfig = { thinkingBudget: 512 };
-    body.generationConfig.temperature = 0.5;
+    // flash: 가벼운 추론으로 빠르고 간결하게
+    body.generationConfig.thinkingConfig = { thinkingBudget: 256 };
+    body.generationConfig.temperature = 0.4;
   }
 
   const response = await fetch(endpoint, {
