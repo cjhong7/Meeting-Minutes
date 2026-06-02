@@ -183,6 +183,14 @@ a { color: var(--blue); }
 }
 .btn-icon:hover { background: rgba(255,255,255,.18); }
 
+/* 제목 옆 인라인 설정 아이콘 */
+.btn-icon-inline {
+  width: 30px;
+  height: 30px;
+  font-size: 16px;
+  margin-left: 4px;
+}
+
 .link-btn {
   border: none;
   background: none;

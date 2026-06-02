@@ -270,3 +270,8 @@ function downloadBlob(blob, filename) {
   document.body.removeChild(a);
   setTimeout(() => URL.revokeObjectURL(url), 5000);
 }
+
+/** Blob 다운로드 (외부 공개용 — 기본 다운로드 폴더에 저장) */
+export function downloadBlobPublic(blob, filename) {
+  downloadBlob(blob, filename);
+}

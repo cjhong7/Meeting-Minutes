@@ -330,48 +330,7 @@ function bindToolbar() {
     }
   });
 
-  // ② 협의록 저장하기 — 현재 협의록을 보관함 + 지정 폴더에 저장
-  document.getElementById('btnSave')?.addEventListener('click', async () => {
-    if (!appState.meeting.minutes) {
-      showToast('협의록을 먼저 생성해 주세요.', 'warn');
-      return;
-    }
-
-    // 1. 보관함(IndexedDB)에 저장 (불러오기용)
-    const { saveMeeting } = await import('./db/indexeddb.js');
-    try {
-      const saved = await saveMeeting(appState.meeting);
-      setState({ meeting: { id: saved.id, createdAt: saved.createdAt, updatedAt: saved.updatedAt, isDirty: false } });
-    } catch (err) {
-      console.error('[Save]', err);
-      showToast(`보관함 저장 실패: ${err.message}`, 'error');
-      return;
-    }
-
-    // 2. 엑셀 파일을 지정 폴더에 저장 (지정 폴더 없으면 위치 지정 창)
-    try {
-      const { buildExcelBlob } = await import('./export/excel.js');
-      const { getArchiveFolder, saveBlobToArchiveFolder, saveBlobToLocation } = await import('./db/backup.js');
-      const result = await buildExcelBlob();
-      if (!result) return;
-
-      const dir = await getArchiveFolder();
-      if (dir) {
-        // 지정된 폴더에 바로 저장
-        await saveBlobToArchiveFolder(result.blob, result.fileName);
-        showToast(`보관함 폴더에 저장되었습니다: ${result.fileName}`, 'success');
-      } else {
-        // 폴더 미지정 → 위치 지정 창
-        showToast('보관함 폴더가 지정되지 않아 저장 위치를 직접 선택합니다.', 'info');
-        await saveBlobToLocation(result.blob, result.fileName);
-      }
-    } catch (err) {
-      console.error('[SaveFile]', err);
-      showToast(`파일 저장 실패: ${err.message}`, 'error');
-    }
-  });
-
-  // ③ 협의록 불러오기 — 보관함 목록
+  // ② 협의록 불러오기 — 보관함 목록
   document.getElementById('btnArchive')?.addEventListener('click', async () => {
     await renderArchiveList();
     openModal('modalArchive');
@@ -392,10 +351,7 @@ function bindToolbar() {
 /** 협의록 생성 여부에 따라 버튼 활성/비활성 */
 function updateToolbarState() {
   const hasMinutes = !!appState.meeting.minutes;
-  const saveBtn  = document.getElementById('btnSave');
   const excelBtn = document.getElementById('btnExcel');
-
-  if (saveBtn)  saveBtn.disabled  = !hasMinutes;
   if (excelBtn) excelBtn.disabled = !hasMinutes;
 }
 
@@ -510,6 +466,9 @@ async function runGenerate() {
     updateToolbarState();
     showToast('협의록이 생성되었습니다.', 'success');
     updateGenerateHint('재생성하려면 버튼을 다시 누르세요');
+
+    // 생성 직후 자동 저장 (보관함 + 파일)
+    await autoSaveMeeting();
   } catch (err) {
     console.error('[Generate]', err);
     setState({ meeting: { isGenerating: false } });
@@ -518,6 +477,43 @@ async function runGenerate() {
   } finally {
     showGeneratingSpinner(false);
     disableInputPanel(false);
+  }
+}
+
+/**
+ * 협의록 생성 직후 자동 저장
+ * - 보관함(IndexedDB)에 저장 (불러오기용)
+ * - 지정 폴더가 있으면 그 폴더에, 없으면 기본 다운로드 폴더에 엑셀 자동 저장
+ */
+async function autoSaveMeeting() {
+  // 1. 보관함(IndexedDB)
+  try {
+    const { saveMeeting } = await import('./db/indexeddb.js');
+    const saved = await saveMeeting(appState.meeting);
+    setState({ meeting: { id: saved.id, createdAt: saved.createdAt, updatedAt: saved.updatedAt, isDirty: false } });
+  } catch (err) {
+    console.error('[AutoSave/DB]', err);
+  }
+
+  // 2. 엑셀 파일 자동 저장
+  try {
+    const { buildExcelBlob } = await import('./export/excel.js');
+    const { getArchiveFolder, saveBlobToArchiveFolder, downloadBlobPublic } = await import('./db/backup.js');
+    const result = await buildExcelBlob();
+    if (!result) return;
+
+    const dir = await getArchiveFolder();
+    if (dir) {
+      // 사용자가 지정한 폴더에 저장
+      await saveBlobToArchiveFolder(result.blob, result.fileName);
+      showToast(`지정 폴더에 저장되었습니다: ${result.fileName}`, 'success');
+    } else {
+      // 폴더 미지정 → 기본 다운로드 폴더에 자동 저장
+      downloadBlobPublic(result.blob, result.fileName);
+      showToast(`다운로드 폴더에 저장되었습니다: ${result.fileName}`, 'success');
+    }
+  } catch (err) {
+    console.error('[AutoSave/File]', err);
   }
 }
 
