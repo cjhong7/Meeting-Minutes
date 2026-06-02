@@ -268,7 +268,18 @@
             <button class="btn btn-xs pen-tool pen-tool-active" id="btnPenDraw" type="button" title="펜">✏ 펜</button>
             <button class="btn btn-xs pen-tool" id="btnPenErase" type="button" title="지우개">🧽 지우개</button>
             <label class="pen-size-label">
-              굵기 <input type="range" id="penSize" min="1" max="12" value="3" class="pen-size-slider">
+              굵기
+              <select id="penSize" class="pen-size-select">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3" selected>3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+                <option value="8">8</option>
+                <option value="10">10</option>
+                <option value="12">12</option>
+              </select>
             </label>
             <input type="color" id="penColor" value="#1e2633" title="색상" class="pen-color-input">
             <button class="btn btn-xs btn-ghost" id="btnPenUndo" type="button" title="실행 취소">↩</button>

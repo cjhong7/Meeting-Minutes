@@ -58,13 +58,13 @@ function setupCanvas() {
   ctx.lineCap  = 'round';
   ctx.lineJoin = 'round';
 
-  fillWhite();
+  clearToTransparent();
   saveUndoState();
 }
 
-function fillWhite() {
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(0, 0, canvas.width / DPR, canvas.height / DPR);
+/** 캔버스를 투명하게 비움 (회색 줄은 CSS 배경이 담당) */
+function clearToTransparent() {
+  ctx.clearRect(0, 0, canvas.width / DPR, canvas.height / DPR);
 }
 
 /* ── 도구 바인딩 ── */
@@ -72,7 +72,7 @@ function bindTools() {
   document.getElementById('btnPenDraw')?.addEventListener('click', () => setTool('pen'));
   document.getElementById('btnPenErase')?.addEventListener('click', () => setTool('eraser'));
 
-  document.getElementById('penSize')?.addEventListener('input', e => {
+  document.getElementById('penSize')?.addEventListener('change', e => {
     penSize = parseInt(e.target.value, 10);
   });
 
@@ -184,7 +184,7 @@ function restoreState(dataUrl) {
 }
 
 function clearCanvas() {
-  fillWhite();
+  clearToTransparent();
   saveUndoState();
   showToast('캔버스를 지웠습니다.', 'info');
 }
@@ -212,8 +212,16 @@ async function extractText() {
   showToast('손글씨 OCR 진행 중…', 'info');
 
   try {
-    // 캔버스 → PNG base64
-    const dataUrl = canvas.toDataURL('image/png');
+    // 투명 캔버스 → 흰 배경 합성 (회색 줄 제외, 글씨만 깨끗하게)
+    const tmp = document.createElement('canvas');
+    tmp.width  = canvas.width;
+    tmp.height = canvas.height;
+    const tctx = tmp.getContext('2d');
+    tctx.fillStyle = '#ffffff';
+    tctx.fillRect(0, 0, tmp.width, tmp.height);
+    tctx.drawImage(canvas, 0, 0);
+
+    const dataUrl = tmp.toDataURL('image/png');
     const base64 = dataUrl.split(',')[1];
 
     let text = '';

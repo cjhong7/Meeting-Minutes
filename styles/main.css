@@ -550,14 +550,29 @@ a { color: var(--blue); }
 .pen-tool { transition: background .1s; }
 .pen-tool-active { background: var(--blue) !important; color: #fff !important; }
 .pen-size-label { display: flex; align-items: center; gap: 4px; font-size: 12px; }
-.pen-size-slider { width: 60px; }
+.pen-size-select {
+  font-size: 12px; padding: 3px 6px; border: 1px solid var(--line);
+  border-radius: var(--radius-sm); background: var(--panel); cursor: pointer;
+}
 .pen-color-input { width: 28px; height: 28px; border: 1px solid var(--line); border-radius: 4px; padding: 0; cursor: pointer; }
 
 .pen-canvas-wrap {
   border: 1px solid var(--line); border-radius: var(--radius-sm);
   overflow: auto; max-height: 500px; background: #fff;
 }
-.pen-canvas-wrap canvas { display: block; cursor: crosshair; }
+/* 캔버스에 가상의 회색 줄(노트 라인) 배경 — 36px 간격 */
+.pen-canvas-wrap canvas {
+  display: block;
+  cursor: crosshair;
+  background-color: #fff;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 35px,
+    #d9dee6 35px,
+    #d9dee6 36px
+  );
+}
 
 .pen-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 8px; }
 .pen-palm-toggle { font-size: 12px; }
