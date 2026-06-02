@@ -31,7 +31,7 @@ export async function callOpenAI({ system, user, model, apiKey }) {
       { role: 'user',   content: user },
     ],
     temperature: 0.3,
-    max_tokens: 2048,
+    max_tokens: 3500,
   };
 
   const response = await fetch(ENDPOINT, {
