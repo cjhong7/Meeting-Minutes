@@ -26,10 +26,6 @@ export async function callGemini({ system, user, model, apiKey }) {
   // 모든 2.0/2.5 모델은 v1beta + systemInstruction 지원
   const endpoint = `${BASE_URL}/${model}:generateContent?key=${apiKey}`;
 
-  // 2.5-pro는 추론(thinking) 모델 → 추론 토큰이 출력 한도를 소모하므로 한도를 크게 설정
-  const isThinking = model.includes('2.5-pro') || model.includes('2.5-flash');
-  const maxTokens  = isThinking ? 8192 : 3500;
-
   const body = {
     systemInstruction: { parts: [{ text: system }] },
     contents: [
@@ -39,14 +35,19 @@ export async function callGemini({ system, user, model, apiKey }) {
       },
     ],
     generationConfig: {
-      temperature: 0.4,
-      maxOutputTokens: maxTokens,
+      temperature: 0.3,        // 환각 억제 (낮을수록 입력에 충실)
+      maxOutputTokens: 8192,
     },
   };
 
-  // 2.5-flash는 thinking을 낮춰 답변 토큰 확보 (flash는 빠른 응답 우선)
-  if (model.includes('2.5-flash')) {
+  // ── 모델별 추론(thinking) 제어 ──
+  if (model.includes('2.5-pro')) {
+    // pro: 고품질·상세 — 추론은 적당히 제한하여 답변 분량 충분히 확보
+    body.generationConfig.thinkingConfig = { thinkingBudget: 1024 };
+  } else if (model.includes('2.5-flash')) {
+    // flash: 가볍게·빠르게 — 추론 최소화, 답변 한도도 작게
     body.generationConfig.thinkingConfig = { thinkingBudget: 0 };
+    body.generationConfig.maxOutputTokens = 3000;
   }
 
   const response = await fetch(endpoint, {
