@@ -306,6 +306,14 @@
 
     <!-- ─────────── 2쪽: 미리보기 패널 ─────────── -->
     <aside class="panel preview-panel" id="panelPreview" aria-label="협의록 미리보기">
+
+      <!-- 미리보기 상단 액션 -->
+      <div class="preview-bar preview-bar-top">
+        <button class="btn btn-ghost" id="btnPrint" type="button">
+          <span aria-hidden="true">🖨</span> 인쇄
+        </button>
+      </div>
+
       <div class="preview-scroll">
 
         <!-- 협의록 종이 -->
@@ -366,13 +374,6 @@
           </div>
 
         </div><!-- .paper -->
-
-        <!-- 미리보기 하단 액션 -->
-        <div class="preview-bar">
-          <button class="btn btn-ghost" id="btnPrint" type="button">
-            <span aria-hidden="true">🖨</span> 인쇄
-          </button>
-        </div>
 
       </div><!-- .preview-scroll -->
     </aside><!-- #panelPreview -->

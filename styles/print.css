@@ -10,12 +10,18 @@
     - 맑은 고딕
    ============================================================ */
 
+/* ── 전역 box-sizing (테두리 잘림 방지) ── */
+* {
+  box-sizing: border-box !important;
+}
+
 /* ── 숨길 UI 요소 ── */
 .app-header,
 .toolbar,
 .tab-switcher,
 .input-panel,
 .preview-bar,
+.preview-bar-top,
 .toast-area,
 .modal-overlay,
 .generating-overlay,
@@ -66,24 +72,25 @@ body {
 /* ── 종이 (A4 가로 폭 최대 활용) ── */
 .paper {
   width: 100% !important;
-  max-width: none !important;
+  max-width: 100% !important;
   border: none !important;
   box-shadow: none !important;
   border-radius: 0 !important;
-  padding: 0 !important;
+  padding: 2pt !important;       /* 우측 테두리 잘림 방지용 안전 여백 */
   margin: 0 !important;
   min-height: auto !important;
+  overflow: visible !important;
 }
 
-/* ── 인쇄 페이지 설정 (여백 최소화) ── */
+/* ── 인쇄 페이지 설정 (여백 확보로 외곽선 보장) ── */
 @page {
   size: A4 portrait;
-  margin: 10mm 10mm 12mm 10mm;
+  margin: 12mm 12mm 14mm 12mm;
 }
 
 /* 첫 페이지 상단 여백 약간 더 */
 @page :first {
-  margin-top: 12mm;
+  margin-top: 14mm;
 }
 
 /* ── 제목 ── */
@@ -104,6 +111,7 @@ body {
   font-size: 10pt !important;
   table-layout: fixed !important;
   margin-bottom: 0 !important;
+  border: 1pt solid #2d3542 !important;   /* 표 바깥 테두리 명시 */
 }
 
 .meta-th {

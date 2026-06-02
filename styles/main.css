@@ -779,6 +779,16 @@ a { color: var(--blue); }
   border-top: 1px solid var(--line);
 }
 
+/* 상단 인쇄바 */
+.preview-bar-top {
+  justify-content: flex-end;
+  padding: 8px 12px;
+  border-top: none;
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+  flex-shrink: 0;
+}
+
 /* ── AI 생성 중 오버레이 ── */
 .generating-overlay {
   position: absolute;
