@@ -71,7 +71,7 @@ export async function generate({ text, mode, title, date, agendas }) {
       result = await callOpenAI({ system, user, model, apiKey });
       break;
     case 'gemini':
-      result = await callGemini({ system, user, model, apiKey });
+      result = await callGemini({ system, user, model, apiKey, mode });
       break;
     case 'claude':
       result = await callClaude({ system, user, model, apiKey });

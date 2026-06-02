@@ -20,7 +20,7 @@ const BASE_URL_V1 = 'https://generativelanguage.googleapis.com/v1/models';
  * @param {string}   params.apiKey   Gemini API 키
  * @returns {Promise<{ text: string, usage: { input: number, output: number } }>}
  */
-export async function callGemini({ system, user, model, apiKey }) {
+export async function callGemini({ system, user, model, apiKey, mode = '' }) {
   if (!apiKey) throw new Error('Gemini API 키가 설정되지 않았습니다.');
 
   // 모든 2.0/2.5 모델은 v1beta + systemInstruction 지원
@@ -51,6 +51,12 @@ export async function callGemini({ system, user, model, apiKey }) {
     body.generationConfig.maxOutputTokens = 3500;
     body.generationConfig.thinkingConfig = { thinkingBudget: 256 };
     body.generationConfig.temperature = 0.4;
+  }
+
+  // ── 펜(손글씨) 모드 전용 온도 ──
+  if (mode === 'pen') {
+    if (model.includes('2.5-pro'))        body.generationConfig.temperature = 0.8;
+    else if (model.includes('2.5-flash')) body.generationConfig.temperature = 0.6;
   }
 
   const response = await fetch(endpoint, {
