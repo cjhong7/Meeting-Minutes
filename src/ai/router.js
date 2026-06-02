@@ -21,7 +21,7 @@ import { simulate } from './simulator.js';
 /** 기본 모델 (사용자가 선택하지 않은 경우 사용) */
 const DEFAULT_MODEL = {
   openai: 'gpt-4o-mini',
-  gemini: 'gemini-2.5-flash',
+  gemini: 'gemini-2.5-pro',
   claude: 'claude-haiku-4-20250414',
 };
 
