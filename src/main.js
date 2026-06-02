@@ -410,26 +410,46 @@ async function onGenerateClick() {
 
 function setupCostConfirmModal(engine, inputText) {
   const names = {
-    openai: 'GPT-4o (OpenAI)',
+    openai: 'GPT (OpenAI)',
     gemini: 'Gemini (Google)',
     claude: 'Claude (Anthropic)',
     sim:    '로컬 시뮬레이션',
   };
 
+  // 무료 티어가 있는 엔진 (Gemini만 무료 티어 제공)
+  const FREE_TIER = { gemini: true };
+
   const engineMsg = document.getElementById('costEngineMsg');
   const estimateMsg = document.getElementById('costEstimateMsg');
   const transferMsg = document.getElementById('transferWarnMsg');
 
-  if (engineMsg)  engineMsg.textContent  = `엔진: ${names[engine] || engine}`;
+  // 선택된 모델명 가져오기
+  const selectedModel = engine !== 'sim'
+    ? (localStorage.getItem(`anti_model_${engine}`) || '')
+    : '';
+
+  if (engineMsg) {
+    engineMsg.textContent = selectedModel
+      ? `엔진: ${names[engine] || engine} · ${selectedModel}`
+      : `엔진: ${names[engine] || engine}`;
+  }
+
   if (estimateMsg) {
     if (engine === 'sim') {
       estimateMsg.textContent = '비용: 0원 (로컬 시뮬레이션, AI 호출 없음)';
+    } else if (FREE_TIER[engine]) {
+      estimateMsg.innerHTML =
+        '💚 <b>무료 티어 우선 사용</b> — 분당 사용량 한도 내에서는 무료입니다.<br>' +
+        '<span style="color:#c0392b">한도를 초과하거나 유료 결제가 설정된 경우 비용이 발생할 수 있습니다.</span>';
     } else {
       const words = inputText.trim().split(/\s+/).length;
       const tokenEst = Math.round(words * 1.3);
-      estimateMsg.textContent = `예상 입력 토큰: 약 ${tokenEst.toLocaleString()}개 (비용 추정 약 ${Math.round(tokenEst * 0.002)}원)`;
+      estimateMsg.innerHTML =
+        `⚠ <b>유료 엔진</b> — 예상 입력 토큰 약 ${tokenEst.toLocaleString()}개<br>` +
+        '<span style="color:#c0392b">호출 시 API 사용료가 발생합니다.</span>';
     }
   }
+
   if (transferMsg) {
     transferMsg.hidden = engine === 'sim';
     transferMsg.textContent = engine !== 'sim'
