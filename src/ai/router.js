@@ -59,10 +59,10 @@ export async function generate({ text, mode, title, date, agendas }) {
   }
 
   // ── 모델 결정 (사용자 선택 모델 우선) ──
-  const { system, user } = buildPrompt({ text, mode, title, date, agendas });
-
-  // ── 모델 결정 ──
   const model = getSelectedModel(engine);
+
+  // ── 프롬프트 빌드 (모델 등급별 상세도 조정) ──
+  const { system, user } = buildPrompt({ text, mode, title, date, agendas, model });
 
   // ── 엔진별 호출 ──
   let result;

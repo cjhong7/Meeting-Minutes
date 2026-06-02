@@ -24,7 +24,7 @@ const MODE_VARS = {
  * @param {Object} params
  * @returns {{ system: string, user: string }}
  */
-export function buildPrompt({ text, mode = 'typing', title = '', date = '', agendas = [] }) {
+export function buildPrompt({ text, mode = 'typing', title = '', date = '', agendas = [], model = '' }) {
   const isPlanning = mode === 'plan';
   const vars = isPlanning ? MODE_VARS.plan : MODE_VARS.meeting;
 
@@ -121,9 +121,9 @@ ${agendaExample}
 - 입력은 손글씨를 인식한 결과로, 불완전하거나 일부 오인식이 있을 수 있음
 - 입력에 적힌 내용을 중심으로 정리하고, 임의의 새 안건·결정은 추가하지 말 것
 - 불명확하거나 오인식된 부분은 무리하게 추측하지 말 것
-- 다만 적힌 내용을 자연스러운 문장으로 다듬고, 맥락상 명백한 후속 조치 정도는
-  최소한으로 보완하여 협의록답게 정리해도 됨
-- 인식된 핵심 단어·표현을 최대한 살려 간결하게 정리할 것`
+- 다만 적힌 내용을 자연스러운 문장으로 다듬고, 맥락상 자연스러운 후속 조치나
+  세부 보완은 적당히 추가하여 협의록답게 정리해도 됨
+- 인식된 핵심 단어·표현을 최대한 살려 정리하되 너무 빈약하지 않게 작성할 것`
     : '';
 
   // ── 단일 안건(또는 안건 없음): 한 장 분량으로 간략하게 ──
@@ -138,9 +138,29 @@ ${agendaExample}
 - 불필요하게 길게 늘이지 말고 요점 위주로 정리`
     : '';
 
+  // ── 모델 등급별 상세도 (pro = 고품질·정교, flash = 간결) ──
+  let tierNote = '';
+  if (model.includes('2.5-pro')) {
+    tierNote = `
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[고품질 작성 지침]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- 각 안건의 논의·결정 내용을 정교하고 깊이 있게 분석하여 작성
+- 표현을 다듬어 전문적이고 완성도 높은 협의록으로 정리
+- 각 항목을 구체적이고 명확하게, 빠진 논점 없이 충실하게 작성`;
+  } else if (model.includes('2.5-flash')) {
+    tierNote = `
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[간결 작성 지침]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- 핵심 위주로 간결하게 요점만 정리`;
+  }
+
   const user = `[회의 내용]\n${text}`;
 
-  return { system: system + penNote + concise, user };
+  return { system: system + penNote + concise + tierNote, user };
 }
 
 function formatDate(iso) {

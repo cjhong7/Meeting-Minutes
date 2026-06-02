@@ -42,13 +42,13 @@ export async function callGemini({ system, user, model, apiKey }) {
 
   // ── 모델별 차별화 (pro = 더 풍부/정교, flash = 간결/빠름) ──
   if (model.includes('2.5-pro')) {
-    // pro: 답변 토큰 넉넉히 + 추론 적당히 → 더 상세하고 정교하게
-    body.generationConfig.maxOutputTokens = 8000;
-    body.generationConfig.thinkingConfig = { thinkingBudget: 1024 };
-    body.generationConfig.temperature = 0.7;
+    // pro: 깊은 추론 + 넉넉한 답변 토큰 + 집중도 높은 온도 → 정교하고 충실
+    body.generationConfig.maxOutputTokens = 10000;
+    body.generationConfig.thinkingConfig = { thinkingBudget: 2048 };
+    body.generationConfig.temperature = 0.5;
   } else if (model.includes('2.5-flash')) {
     // flash: 답변 토큰 작게 + 추론 최소 → 간결하고 빠르게
-    body.generationConfig.maxOutputTokens = 4000;
+    body.generationConfig.maxOutputTokens = 3500;
     body.generationConfig.thinkingConfig = { thinkingBudget: 256 };
     body.generationConfig.temperature = 0.4;
   }
