@@ -168,7 +168,10 @@ body {
   font-weight: 600 !important;
   border-bottom: 1pt solid #2d3542 !important;
   text-align: center !important;
-  min-height: auto !important;
+  min-height: 28pt !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
   background: #f0f3fa !important;
   -webkit-print-color-adjust: exact !important;
   print-color-adjust: exact !important;
