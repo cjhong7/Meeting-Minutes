@@ -176,9 +176,30 @@ export async function exportExcel() {
     currentRow++;
 
     // ════════════════════════════════════════════════════════════
-    //  참석자 행 (이름 + 서명란)
+    //  참석자 행
     // ════════════════════════════════════════════════════════════
-    if (total > 0) {
+    const defaultNames = [
+      '교장', '교감', '부장', '참석자', '참석자', '참석자',
+      '참석자', '참석자', '참석자', '참석자', '참석자', '참석자',
+      '참석자', '참석자', '참석자', '참석자',
+    ];
+
+    if (total === 1) {
+      // 1명: 이름을 한 칸으로 병합, 서명란 없음
+      ws.getCell(currentRow, 1).value = '참석자';
+      ws.getCell(currentRow, 1).fill  = FILL_HEADER;
+      ws.getCell(currentRow, 1).font  = FONT_BOLD;
+      ws.getCell(currentRow, 1).alignment = ALIGN_CENTER;
+
+      ws.mergeCells(currentRow, 2, currentRow, totalCols);
+      const nameCell = ws.getCell(currentRow, 2);
+      nameCell.value = (attendeeNames[0] || '').trim() || '참석자';
+      nameCell.fill  = FILL_HEADER;
+      nameCell.font  = FONT_BOLD;
+      nameCell.alignment = ALIGN_CENTER;
+      ws.getRow(currentRow).height = 25;
+      currentRow += 1;
+    } else if (total > 0) {
       // "참석자" 헤더를 세로 병합
       const attRowSpan = actualRows * 2;  // 이름+서명 × 행 수
       ws.mergeCells(currentRow, 1, currentRow + attRowSpan - 1, 1);
@@ -187,12 +208,6 @@ export async function exportExcel() {
       attLabel.fill    = FILL_HEADER;
       attLabel.font    = FONT_BOLD;
       attLabel.alignment = ALIGN_CENTER;
-
-      const defaultNames = [
-        '교장', '교감', '부장', '참석자', '참석자', '참석자',
-        '참석자', '참석자', '참석자', '참석자', '참석자', '참석자',
-        '참석자', '참석자', '참석자', '참석자',
-      ];
 
       for (let r = 0; r < actualRows; r++) {
         const nameRow = currentRow;
@@ -358,13 +373,25 @@ export async function buildExcelBlob() {
   currentRow++;
 
   // 참석자
-  if (total > 0) {
+  const defaultNames = ['교장','교감','부장','참석자','참석자','참석자','참석자','참석자','참석자','참석자','참석자','참석자','참석자','참석자','참석자','참석자'];
+  if (total === 1) {
+    // 1명: 이름을 한 칸으로 병합, 서명란 없음
+    ws.getCell(currentRow, 1).value = '참석자';
+    ws.getCell(currentRow, 1).fill = FILL_HEADER;
+    ws.getCell(currentRow, 1).font = FONT_BOLD;
+    ws.getCell(currentRow, 1).alignment = ALIGN_CENTER;
+    ws.mergeCells(currentRow, 2, currentRow, totalCols);
+    const nameCell = ws.getCell(currentRow, 2);
+    nameCell.value = (attendeeNames[0] || '').trim() || '참석자';
+    nameCell.fill = FILL_HEADER; nameCell.font = FONT_BOLD; nameCell.alignment = ALIGN_CENTER;
+    ws.getRow(currentRow).height = 25;
+    currentRow += 1;
+  } else if (total > 0) {
     const attRowSpan = actualRows * 2;
     ws.mergeCells(currentRow, 1, currentRow + attRowSpan - 1, 1);
     const attLabel = ws.getCell(currentRow, 1);
     attLabel.value = '참석자'; attLabel.fill = FILL_HEADER; attLabel.font = FONT_BOLD;
     attLabel.alignment = ALIGN_CENTER;
-    const defaultNames = ['교장','교감','부장','참석자','참석자','참석자','참석자','참석자','참석자','참석자','참석자','참석자','참석자','참석자','참석자','참석자'];
     for (let r = 0; r < actualRows; r++) {
       const nameRow = currentRow, signRow = currentRow + 1;
       ws.getRow(nameRow).height = 25;
