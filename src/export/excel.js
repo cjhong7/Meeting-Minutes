@@ -110,7 +110,7 @@ export async function exportExcel() {
     const total = meeting.attendeeCount || attendeeNames.length || 6;
     const actualRows = total >= 9 ? 2 : 1;                          // 참석자 행 수
     const slotsPerRow = actualRows === 1
-      ? Math.max(total, 6)                                          // 1행: 최소 6칸
+      ? (total === 1 ? 6 : Math.max(total, 3))                      // 1명=6칸 / 2~8명=인원수(최소 3)
       : Math.ceil(total / 2);                                       // 2행: 반씩 배분
     const contentCols = slotsPerRow;
     const totalCols   = contentCols + 1;                             // +1 = 왼쪽 헤더 열
@@ -331,7 +331,9 @@ export async function buildExcelBlob() {
   const attendeeNames = meeting.attendeeNames || [];
   const total = meeting.attendeeCount || attendeeNames.length || 6;
   const actualRows = total >= 9 ? 2 : 1;
-  const slotsPerRow = actualRows === 1 ? Math.max(total, 6) : Math.ceil(total / 2);
+  const slotsPerRow = actualRows === 1
+    ? (total === 1 ? 6 : Math.max(total, 3))   // 1명=6칸 / 2~8명=인원수(최소 3)
+    : Math.ceil(total / 2);
   const contentCols = slotsPerRow;
   const totalCols   = contentCols + 1;
 
