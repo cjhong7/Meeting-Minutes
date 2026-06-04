@@ -68,6 +68,18 @@ function boot() {
 
   // 협의록 있으면 도구바 버튼 활성화
   updateToolbarState();
+
+  // 폴더 지정 미지원 기기(모바일 등)에서는 버튼 숨김
+  adaptForDeviceSupport();
+}
+
+/** 기기 지원 여부에 따라 UI 조정 (모바일 = File System Access 미지원) */
+function adaptForDeviceSupport() {
+  const supportsFolder = 'showDirectoryPicker' in window;
+  const setFolderBtn = document.getElementById('btnSetFolder');
+  if (setFolderBtn && !supportsFolder) {
+    setFolderBtn.hidden = true; // 모바일·일부 브라우저: 폴더 지정 불가
+  }
 }
 
 /* ============================================================

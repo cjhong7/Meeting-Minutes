@@ -1301,7 +1301,8 @@ body.is-offline .app-header { margin-top: 32px; }
 
   .app-title { font-size: 15px; }
 
-  .toolbar-inner { gap: 4px; overflow-x: auto; flex-wrap: nowrap; }
+  .toolbar-inner { gap: 4px; overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; }
+  .toolbar-inner .btn { flex-shrink: 0; }
   .btn { padding: 0 10px; height: 32px; font-size: 12px; }
 
   .mode-selector { gap: 4px; }
