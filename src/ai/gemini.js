@@ -3,12 +3,11 @@
  *
  * 계획서 Ⅵ-9:
  *  - generateContent API, API 키 쿼리 파라미터 방식
- *  - 모델: gemini-2.0-flash (저가) / gemini-2.0-pro (고급)
+ *  - 모델: gemini-2.5-flash (빠름) / gemini-2.5-pro (고품질)
  *  - 브라우저 직접 호출 가능
  */
 
 const BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
-const BASE_URL_V1 = 'https://generativelanguage.googleapis.com/v1/models';
 
 /**
  * Gemini generateContent API를 호출합니다.
@@ -16,14 +15,16 @@ const BASE_URL_V1 = 'https://generativelanguage.googleapis.com/v1/models';
  * @param {Object} params
  * @param {string}   params.system   시스템 지시 (systemInstruction)
  * @param {string}   params.user     사용자 입력 (contents)
- * @param {string}   params.model    모델명 (gemini-2.0-flash / gemini-2.0-pro)
+ * @param {string}   params.model    모델명 (gemini-2.5-flash / gemini-2.5-pro)
  * @param {string}   params.apiKey   Gemini API 키
  * @returns {Promise<{ text: string, usage: { input: number, output: number } }>}
  */
 export async function callGemini({ system, user, model, apiKey, mode = '' }) {
   if (!apiKey) throw new Error('Gemini API 키가 설정되지 않았습니다.');
 
-  // 모든 2.0/2.5 모델은 v1beta + systemInstruction 지원
+  // 단종된 2.0 모델은 2.5-flash로 자동 대체
+  if (model.includes('2.0')) model = 'gemini-2.5-flash';
+
   const endpoint = `${BASE_URL}/${model}:generateContent?key=${apiKey}`;
 
   const body = {

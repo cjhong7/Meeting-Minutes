@@ -443,10 +443,10 @@ async function runGeminiStt() {
     const ext = file.name.split('.').pop().toLowerCase();
     const mimeType = mimeMap[ext] || file.type || 'audio/webm';
 
-    // Gemini 모델 선택 (저장된 모델 또는 기본)
-    const model = localStorage.getItem('anti_model_gemini') || 'gemini-2.5-flash';
-    const base  = model.includes('2.0') ? 'https://generativelanguage.googleapis.com/v1/models'
-                                        : 'https://generativelanguage.googleapis.com/v1beta/models';
+    // Gemini 모델 선택 (저장된 모델 또는 기본, 단종된 2.0은 2.5-flash로 대체)
+    let model = localStorage.getItem('anti_model_gemini') || 'gemini-2.5-flash';
+    if (model.includes('2.0')) model = 'gemini-2.5-flash';
+    const base = 'https://generativelanguage.googleapis.com/v1beta/models';
 
     const res = await fetch(`${base}/${model}:generateContent?key=${apiKey}`, {
       method: 'POST',

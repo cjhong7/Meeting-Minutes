@@ -27,7 +27,13 @@ const DEFAULT_MODEL = {
 
 /** localStorage에서 사용자가 선택한 모델을 가져옴 */
 function getSelectedModel(engine) {
-  return localStorage.getItem(`anti_model_${engine}`) || DEFAULT_MODEL[engine];
+  let model = localStorage.getItem(`anti_model_${engine}`) || DEFAULT_MODEL[engine];
+  // 단종된 Gemini 2.0 모델은 2.5-flash로 대체
+  if (engine === 'gemini' && model.includes('2.0')) {
+    model = 'gemini-2.5-flash';
+    localStorage.setItem('anti_model_gemini', model);
+  }
+  return model;
 }
 
 /**
