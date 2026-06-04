@@ -1275,6 +1275,13 @@ a { color: var(--blue); }
 .key-status-none { color: var(--muted); background: var(--surface); }
 .model-select { margin-top: 4px; }
 
+/* 키 저장 체크박스 */
+.key-remember-label {
+  display: flex; align-items: center; gap: 6px;
+  margin-top: 8px; font-size: 12px; color: var(--muted); cursor: pointer;
+}
+.key-remember { accent-color: var(--blue); width: 15px; height: 15px; }
+
 /* ── body scroll lock (모달 열릴 때) ── */
 body.modal-open { overflow: hidden; }
 

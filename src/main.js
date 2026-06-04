@@ -635,6 +635,10 @@ async function syncAiSettingsModal() {
           if (decrypted) inputEl.value = decrypted;
         } catch {}
       }
+
+      // 키 저장 체크박스: 저장된 키 있으면 체크, 없으면 기본 체크
+      const chk = document.getElementById(`chkRemember${label}`);
+      if (chk) chk.checked = saved ? true : true; // 기본 체크 (저장 권장)
     }
 
     // PIN 상태
@@ -684,16 +688,28 @@ async function saveAiSettings() {
 
   // keystore.js로 암호화 저장
   try {
-    const { saveKey } = await import('./crypto/keystore.js');
+    const { saveKey, deleteKey } = await import('./crypto/keystore.js');
     const keyMap = {
       openai: document.getElementById('inOpenaiKey')?.value?.trim(),
       gemini: document.getElementById('inGeminiKey')?.value?.trim(),
       claude: document.getElementById('inClaudeKey')?.value?.trim(),
     };
+    const rememberMap = {
+      openai: document.getElementById('chkRememberOpenai')?.checked,
+      gemini: document.getElementById('chkRememberGemini')?.checked,
+      claude: document.getElementById('chkRememberClaude')?.checked,
+    };
 
     for (const [eng, val] of Object.entries(keyMap)) {
-      if (val) {
-        await saveKey(eng, val, pin);
+      if (rememberMap[eng]) {
+        // 저장 체크됨 → 새 키 입력 시 저장 (빈 값이면 기존 키 유지)
+        if (val) await saveKey(eng, val, pin);
+      } else {
+        // 저장 해제됨 → 이 기기에서 키 삭제 (저장 안 함)
+        await deleteKey(eng);
+        // 입력 필드도 비움
+        const inp = document.getElementById(`in${eng.charAt(0).toUpperCase() + eng.slice(1)}Key`);
+        if (inp) inp.value = '';
       }
     }
 
