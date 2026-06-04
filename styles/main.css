@@ -191,6 +191,38 @@ a { color: var(--blue); }
   margin-left: 4px;
 }
 
+/* 도움말 아이콘 (툴바) */
+.btn-help {
+  width: 30px;
+  height: 30px;
+  font-size: 15px;
+  color: var(--blue);
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--panel);
+  flex-shrink: 0;
+}
+.btn-help:hover { background: var(--blue-light); }
+
+/* 클라우드 안내 모달 */
+.cloud-intro { font-size: 14px; line-height: 1.6; margin-bottom: 16px; color: var(--ink); }
+.cloud-step-title { font-size: 15px; font-weight: 700; margin: 16px 0 8px; }
+.cloud-steps { margin: 0 0 8px; padding-left: 22px; }
+.cloud-steps li { font-size: 13px; line-height: 1.8; margin-bottom: 4px; }
+.cloud-steps code {
+  background: var(--surface); padding: 1px 5px; border-radius: 3px;
+  font-size: 12px; color: var(--blue-dark);
+}
+.cloud-link { color: var(--blue); text-decoration: underline; }
+.cloud-note {
+  margin-top: 16px; padding: 12px 14px;
+  background: var(--blue-light); border-radius: var(--radius-sm);
+}
+.cloud-note p { font-size: 13px; font-weight: 600; margin: 0 0 6px; }
+.cloud-note ul { margin: 0 0 8px; padding-left: 20px; }
+.cloud-note li { font-size: 13px; line-height: 1.7; }
+.cloud-warn { color: var(--red); font-weight: 600; font-size: 12px; margin-top: 8px !important; }
+
 .link-btn {
   border: none;
   background: none;

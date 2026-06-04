@@ -342,6 +342,11 @@ function bindToolbar() {
     }
   });
 
+  // 클라우드 연동 안내
+  document.getElementById('btnCloudHelp')?.addEventListener('click', () => {
+    openModal('modalCloudHelp');
+  });
+
   // ② 협의록 불러오기 — 보관함 목록
   document.getElementById('btnArchive')?.addEventListener('click', async () => {
     await renderArchiveList();
