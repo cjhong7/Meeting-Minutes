@@ -121,6 +121,34 @@ export async function deleteKey(engine) {
 }
 
 /**
+ * 세션 전용 저장 — 영구 저장(IndexedDB)은 하지 않고
+ * 현재 세션(메모리 + sessionStorage)에서만 키를 사용.
+ * 브라우저(탭)를 닫으면 사라짐.
+ * @param {string} engine
+ * @param {string} rawKey
+ */
+export async function saveKeySessionOnly(engine, rawKey) {
+  const k = (rawKey || '').trim();
+  if (!k) { await deleteKey(engine); return; }
+  // 영구 저장분 제거 (디스크에 남기지 않음)
+  await deleteSetting(KEY_PREFIX + engine);
+  // 세션·메모리에만 보관
+  _decryptedCache.set(engine, k);
+  sessionStorage.setItem(`anti_key_${engine}`, k);
+}
+
+/**
+ * 해당 엔진의 키가 영구 저장(IndexedDB)되어 있는지 확인
+ * (세션 전용 키는 false)
+ * @param {string} engine
+ * @returns {Promise<boolean>}
+ */
+export async function isPersisted(engine) {
+  const record = await getSetting(KEY_PREFIX + engine);
+  return !!record;
+}
+
+/**
  * 해당 엔진의 키가 저장되어 있는지 확인
  * @param {string} engine
  * @returns {Promise<boolean>}

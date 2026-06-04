@@ -612,23 +612,25 @@ async function syncAiSettingsModal() {
 
   // 키 복원 + 상태 표시 (비동기)
   try {
-    const { hasKey, needsPin, loadKey } = await import('./crypto/keystore.js');
+    const { hasKey, needsPin, loadKey, isPersisted } = await import('./crypto/keystore.js');
     for (const eng of ['openai', 'gemini', 'claude']) {
       const label  = eng.charAt(0).toUpperCase() + eng.slice(1);
-      const saved  = await hasKey(eng);
-      const pinSet = saved && (await needsPin(eng));
+      const saved  = await hasKey(eng);              // 영구 또는 세션 키 존재 여부
+      const persisted = await isPersisted(eng);      // 영구 저장 여부
+      const pinSet = persisted && (await needsPin(eng));
       const statusEl = document.getElementById(`keyStatus${label}`);
       const inputEl  = document.getElementById(`in${label}Key`);
 
       // 상태 배지 표시
       if (statusEl) {
-        if (saved && pinSet)  statusEl.textContent = '✅ 키 저장됨  🔒 PIN 설정됨';
-        else if (saved)       statusEl.textContent = '✅ 키 저장됨';
-        else                  statusEl.textContent = '⚠ 저장된 키 없음';
-        statusEl.className = saved ? 'key-saved-status key-status-ok' : 'key-saved-status key-status-none';
+        if (persisted && pinSet)  statusEl.textContent = '✅ 키 저장됨  🔒 PIN 설정됨';
+        else if (persisted)       statusEl.textContent = '✅ 키 저장됨 (이 기기에 보관)';
+        else if (saved)           statusEl.textContent = '🟡 세션 전용 (브라우저 닫으면 사라짐)';
+        else                      statusEl.textContent = '⚠ 저장된 키 없음';
+        statusEl.className = (persisted || saved) ? 'key-saved-status key-status-ok' : 'key-saved-status key-status-none';
       }
 
-      // 저장된 키를 입력 필드에 복원 (PIN 없는 키만)
+      // 저장된 키를 입력 필드에 복원 (PIN 없는 키만 / 세션 키 포함)
       if (inputEl && saved && !pinSet) {
         try {
           const decrypted = await loadKey(eng, '');
@@ -636,9 +638,9 @@ async function syncAiSettingsModal() {
         } catch {}
       }
 
-      // 키 저장 체크박스: 저장된 키 있으면 체크, 없으면 기본 체크
+      // 키 저장 체크박스: 영구 저장이면 체크, 세션전용/없음이면 상황에 맞게
       const chk = document.getElementById(`chkRemember${label}`);
-      if (chk) chk.checked = saved ? true : true; // 기본 체크 (저장 권장)
+      if (chk) chk.checked = persisted ? true : (saved ? false : true);
     }
 
     // PIN 상태
@@ -688,7 +690,7 @@ async function saveAiSettings() {
 
   // keystore.js로 암호화 저장
   try {
-    const { saveKey, deleteKey } = await import('./crypto/keystore.js');
+    const { saveKey, deleteKey, saveKeySessionOnly } = await import('./crypto/keystore.js');
     const keyMap = {
       openai: document.getElementById('inOpenaiKey')?.value?.trim(),
       gemini: document.getElementById('inGeminiKey')?.value?.trim(),
@@ -702,14 +704,15 @@ async function saveAiSettings() {
 
     for (const [eng, val] of Object.entries(keyMap)) {
       if (rememberMap[eng]) {
-        // 저장 체크됨 → 새 키 입력 시 저장 (빈 값이면 기존 키 유지)
+        // 저장 체크됨 → 기기에 영구 저장 (빈 값이면 기존 키 유지)
         if (val) await saveKey(eng, val, pin);
       } else {
-        // 저장 해제됨 → 이 기기에서 키 삭제 (저장 안 함)
-        await deleteKey(eng);
-        // 입력 필드도 비움
-        const inp = document.getElementById(`in${eng.charAt(0).toUpperCase() + eng.slice(1)}Key`);
-        if (inp) inp.value = '';
+        // 저장 해제됨 → 영구 저장은 안 하되, 현재 세션에서는 사용 가능
+        if (val) {
+          await saveKeySessionOnly(eng, val); // 세션 전용 (브라우저 닫으면 사라짐)
+        } else {
+          await deleteKey(eng);
+        }
       }
     }
 
