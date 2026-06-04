@@ -1275,12 +1275,15 @@ a { color: var(--blue); }
 .key-status-none { color: var(--muted); background: var(--surface); }
 .model-select { margin-top: 4px; }
 
-/* 키 저장 체크박스 */
-.key-remember-label {
-  display: flex; align-items: center; gap: 6px;
-  margin-top: 8px; font-size: 12px; color: var(--muted); cursor: pointer;
+/* 키 사용 방식 라디오 (한 줄) */
+.key-mode-row {
+  display: flex; gap: 16px; align-items: center;
+  margin-top: 8px; font-size: 12px; color: var(--ink); flex-wrap: wrap;
 }
-.key-remember { accent-color: var(--blue); width: 15px; height: 15px; }
+.key-mode-row label {
+  display: inline-flex; align-items: center; gap: 5px; cursor: pointer;
+}
+.key-mode-row input[type="radio"] { accent-color: var(--blue); width: 15px; height: 15px; }
 
 /* ── body scroll lock (모달 열릴 때) ── */
 body.modal-open { overflow: hidden; }

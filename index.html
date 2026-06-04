@@ -509,10 +509,10 @@
               placeholder="sk-..." autocomplete="off">
             <button class="btn btn-sm btn-ghost" id="btnShowOpenaiKey" type="button">보기</button>
           </div>
-          <label class="key-remember-label">
-            <input type="checkbox" class="key-remember" id="chkRememberOpenai" checked>
-            이 기기에 키 저장 (해제하면 저장되지 않음)
-          </label>
+          <div class="key-mode-row">
+            <label><input type="radio" name="keyModeOpenai" value="persist" checked> 이 기기에서 계속 키 사용</label>
+            <label><input type="radio" name="keyModeOpenai" value="session"> 이번에만 키 사용</label>
+          </div>
         </div>
 
         <!-- Gemini 키 -->
@@ -526,10 +526,10 @@
               placeholder="AIzaSy..." autocomplete="off">
             <button class="btn btn-sm btn-ghost" id="btnShowGeminiKey" type="button">보기</button>
           </div>
-          <label class="key-remember-label">
-            <input type="checkbox" class="key-remember" id="chkRememberGemini" checked>
-            이 기기에 키 저장 (해제하면 저장되지 않음)
-          </label>
+          <div class="key-mode-row">
+            <label><input type="radio" name="keyModeGemini" value="persist" checked> 이 기기에서 계속 키 사용</label>
+            <label><input type="radio" name="keyModeGemini" value="session"> 이번에만 키 사용</label>
+          </div>
         </div>
 
         <!-- Claude 키 -->
@@ -543,10 +543,10 @@
               placeholder="sk-ant-..." autocomplete="off">
             <button class="btn btn-sm btn-ghost" id="btnShowClaudeKey" type="button">보기</button>
           </div>
-          <label class="key-remember-label">
-            <input type="checkbox" class="key-remember" id="chkRememberClaude" checked>
-            이 기기에 키 저장 (해제하면 저장되지 않음)
-          </label>
+          <div class="key-mode-row">
+            <label><input type="radio" name="keyModeClaude" value="persist" checked> 이 기기에서 계속 키 사용</label>
+            <label><input type="radio" name="keyModeClaude" value="session"> 이번에만 키 사용</label>
+          </div>
         </div>
 
         <!-- PIN -->

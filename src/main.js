@@ -621,13 +621,13 @@ async function syncAiSettingsModal() {
       const statusEl = document.getElementById(`keyStatus${label}`);
       const inputEl  = document.getElementById(`in${label}Key`);
 
-      // 상태 배지 표시
+      // 상태 배지 표시 ('저장된 키 없음'은 표시 안 함)
       if (statusEl) {
         if (persisted && pinSet)  statusEl.textContent = '✅ 키 저장됨  🔒 PIN 설정됨';
         else if (persisted)       statusEl.textContent = '✅ 키 저장됨 (이 기기에 보관)';
-        else if (saved)           statusEl.textContent = '🟡 세션 전용 (브라우저 닫으면 사라짐)';
-        else                      statusEl.textContent = '⚠ 저장된 키 없음';
-        statusEl.className = (persisted || saved) ? 'key-saved-status key-status-ok' : 'key-saved-status key-status-none';
+        else if (saved)           statusEl.textContent = '🟡 이번 세션만 사용 중 (브라우저 닫으면 사라짐)';
+        else                      statusEl.textContent = '';
+        statusEl.className = (persisted || saved) ? 'key-saved-status key-status-ok' : 'key-saved-status';
       }
 
       // 저장된 키를 입력 필드에 복원 (PIN 없는 키만 / 세션 키 포함)
@@ -638,9 +638,10 @@ async function syncAiSettingsModal() {
         } catch {}
       }
 
-      // 키 저장 체크박스: 영구 저장이면 체크, 세션전용/없음이면 상황에 맞게
-      const chk = document.getElementById(`chkRemember${label}`);
-      if (chk) chk.checked = persisted ? true : (saved ? false : true);
+      // 라디오 초기 상태: 영구 저장이면 'persist', 세션전용이면 'session', 없으면 기본 'persist'
+      const mode = persisted ? 'persist' : (saved ? 'session' : 'persist');
+      const radio = document.querySelector(`input[name="keyMode${label}"][value="${mode}"]`);
+      if (radio) radio.checked = true;
     }
 
     // PIN 상태
@@ -696,20 +697,21 @@ async function saveAiSettings() {
       gemini: document.getElementById('inGeminiKey')?.value?.trim(),
       claude: document.getElementById('inClaudeKey')?.value?.trim(),
     };
-    const rememberMap = {
-      openai: document.getElementById('chkRememberOpenai')?.checked,
-      gemini: document.getElementById('chkRememberGemini')?.checked,
-      claude: document.getElementById('chkRememberClaude')?.checked,
+    // 라디오: 'persist'(계속 사용) / 'session'(이번에만)
+    const modeMap = {
+      openai: document.querySelector('input[name="keyModeOpenai"]:checked')?.value || 'persist',
+      gemini: document.querySelector('input[name="keyModeGemini"]:checked')?.value || 'persist',
+      claude: document.querySelector('input[name="keyModeClaude"]:checked')?.value || 'persist',
     };
 
     for (const [eng, val] of Object.entries(keyMap)) {
-      if (rememberMap[eng]) {
-        // 저장 체크됨 → 기기에 영구 저장 (빈 값이면 기존 키 유지)
+      if (modeMap[eng] === 'persist') {
+        // 이 기기에서 계속 키 사용 → 영구 저장 (빈 값이면 기존 키 유지)
         if (val) await saveKey(eng, val, pin);
       } else {
-        // 저장 해제됨 → 영구 저장은 안 하되, 현재 세션에서는 사용 가능
+        // 이번에만 키 사용 → 세션 전용 (브라우저 닫으면 사라짐)
         if (val) {
-          await saveKeySessionOnly(eng, val); // 세션 전용 (브라우저 닫으면 사라짐)
+          await saveKeySessionOnly(eng, val);
         } else {
           await deleteKey(eng);
         }
