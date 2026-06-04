@@ -1,16 +1,16 @@
 /**
  * crypto/keystore.js — API 키 암호화 저장/복호화
  *
- * 계획서 Ⅶ-3:
  *  - crypto.subtle + PBKDF2로 키 파생
  *  - AES-GCM으로 API 키 암호화
  *  - 암호화된 값만 IndexedDB에 저장 (평문 localStorage 금지)
- *  - PIN 선택 설정: 세션당 1회 입력, 브라우저 닫으면 메모리에서 제거
- *  - PIN 분실 시 키 복구 불가 → 재입력 안내
+ *  - 키 사용 방식:
+ *    · 영구(persist): IndexedDB에 암호화 저장 → 재방문에도 유지
+ *    · 세션(session): sessionStorage·메모리만 → 브라우저 닫으면 사라짐
  *
  * 저장 구조 (IndexedDB settings 스토어):
  *   key: 'apikey_{engine}'
- *   value: { iv: Uint8Array, salt: Uint8Array, cipher: ArrayBuffer, hasPin: boolean }
+ *   value: { iv, salt, cipher, hasPin }
  */
 
 /* ── 세션 메모리: 복호화된 키를 세션 내에만 보관 ── */

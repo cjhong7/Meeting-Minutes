@@ -610,18 +610,17 @@ async function syncAiSettingsModal() {
     if (sel && saved) sel.value = saved;
   });
 
-  // 키 복원 + 상태 표시 (비동기)
+  // 키 복원 (비동기)
   try {
-    const { hasKey, needsPin, loadKey, isPersisted } = await import('./crypto/keystore.js');
+    const { hasKey, loadKey, isPersisted } = await import('./crypto/keystore.js');
     for (const eng of ['openai', 'gemini', 'claude']) {
       const label  = eng.charAt(0).toUpperCase() + eng.slice(1);
       const saved  = await hasKey(eng);              // 영구 또는 세션 키 존재 여부
       const persisted = await isPersisted(eng);      // 영구 저장 여부
-      const pinSet = persisted && (await needsPin(eng));
       const inputEl  = document.getElementById(`in${label}Key`);
 
-      // 저장된 키를 입력 필드에 복원 (PIN 없는 키만 / 세션 키 포함)
-      if (inputEl && saved && !pinSet) {
+      // 저장된 키를 입력 필드에 복원
+      if (inputEl && saved) {
         try {
           const decrypted = await loadKey(eng, '');
           if (decrypted) inputEl.value = decrypted;
@@ -632,15 +631,6 @@ async function syncAiSettingsModal() {
       const mode = persisted ? 'persist' : (saved ? 'session' : 'persist');
       const radio = document.querySelector(`input[name="keyMode${label}"][value="${mode}"]`);
       if (radio) radio.checked = true;
-    }
-
-    // PIN 상태
-    const pinBadge = document.getElementById('pinStatus');
-    if (pinBadge && engine !== 'sim') {
-      const pinSet = await needsPin(engine);
-      pinBadge.textContent = pinSet ? '🔒 PIN 설정됨' : '';
-      const pinInput = document.getElementById('inPin');
-      if (pinInput) pinInput.placeholder = pinSet ? 'PIN 변경하려면 새 PIN 입력' : '숫자 4~8자리';
     }
   } catch (e) {
     console.warn('[Settings] 키 상태 확인 실패:', e);
@@ -669,13 +659,11 @@ function updateKeyFieldsVisibility(engine) {
   document.getElementById('fieldOpenaiKey')?.toggleAttribute('hidden', engine !== 'openai');
   document.getElementById('fieldGeminiKey')?.toggleAttribute('hidden', engine !== 'gemini');
   document.getElementById('fieldClaudeKey')?.toggleAttribute('hidden', engine !== 'claude');
-  document.getElementById('fieldPin')?.toggleAttribute('hidden', engine === 'sim');
 }
 
 async function saveAiSettings() {
   const engineEl = document.querySelector('.engine-radio:checked');
   const engine = engineEl ? engineEl.value : 'sim';
-  const pin = document.getElementById('inPin')?.value || '';
 
   setState({ aiEngine: engine });
 
@@ -697,7 +685,7 @@ async function saveAiSettings() {
     for (const [eng, val] of Object.entries(keyMap)) {
       if (modeMap[eng] === 'persist') {
         // 이 기기에서 계속 키 사용 → 영구 저장 (빈 값이면 기존 키 유지)
-        if (val) await saveKey(eng, val, pin);
+        if (val) await saveKey(eng, val, '');
       } else {
         // 이번에만 키 사용 → 세션 전용 (브라우저 닫으면 사라짐)
         if (val) {
@@ -722,9 +710,6 @@ async function saveAiSettings() {
     showToast(`설정 저장 실패: ${err.message}`, 'error');
     return;
   }
-
-  // PIN만 비우기 (키는 다음 열 때 복원되므로 유지)
-  document.getElementById('inPin') && (document.getElementById('inPin').value = '');
 
   closeModal('modalAiSettings');
   showToast('AI 설정이 저장되었습니다.', 'success');
