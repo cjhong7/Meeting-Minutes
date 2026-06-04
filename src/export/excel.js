@@ -271,24 +271,34 @@ export async function exportExcel() {
     currentRow++;
 
     // ════════════════════════════════════════════════════════════
-    //  회의내용 행 (height 400)
+    //  회의내용 행 (내용 분량 비례 + 한 행 한계 초과 시 세로 다중 행 병합)
     // ════════════════════════════════════════════════════════════
-    ws.mergeCells(currentRow, 2, currentRow, totalCols);
-    ws.getCell(currentRow, 1).value = '회의내용';
-    ws.getCell(currentRow, 1).fill  = FILL_HEADER;
-    ws.getCell(currentRow, 1).font  = FONT_BOLD;
-    ws.getCell(currentRow, 1).alignment = ALIGN_CENTER;
+    const { rowsSpanned, perRowHeight } = computeContentLayout(meeting.minutes, contentCols);
+    const contentStartRow = currentRow;
+    const contentEndRow   = currentRow + rowsSpanned - 1;
 
-    ws.getRow(currentRow).height = 400;
+    // A열 라벨 (여러 행이면 세로 병합)
+    if (rowsSpanned > 1) ws.mergeCells(contentStartRow, 1, contentEndRow, 1);
+    ws.getCell(contentStartRow, 1).value = '회의내용';
+    ws.getCell(contentStartRow, 1).fill  = FILL_HEADER;
+    ws.getCell(contentStartRow, 1).font  = FONT_BOLD;
+    ws.getCell(contentStartRow, 1).alignment = ALIGN_CENTER;
 
-    const contentCell = ws.getCell(currentRow, 2);
+    // 내용칸: 세로(여러 행) + 가로(콘텐츠 열) 병합
+    ws.mergeCells(contentStartRow, 2, contentEndRow, totalCols);
+    const contentCell = ws.getCell(contentStartRow, 2);
     contentCell.value     = meeting.minutes || '';
     contentCell.alignment = { vertical: 'top', horizontal: 'left', wrapText: true };
 
+    // 각 행 높이 설정
+    for (let r = contentStartRow; r <= contentEndRow; r++) {
+      ws.getRow(r).height = perRowHeight;
+    }
+
     // ════════════════════════════════════════════════════════════
-    //  전체 셀에 테두리 + 기본 정렬 적용
+    //  전체 셀에 테두리 + 기본 정렬 적용 (회의내용 마지막 행까지)
     // ════════════════════════════════════════════════════════════
-    for (let R = 1; R <= currentRow; R++) {
+    for (let R = 1; R <= contentEndRow; R++) {
       for (let C = 1; C <= totalCols; C++) {
         const cell = ws.getCell(R, C);
         cell.border = BORDER_THIN;
@@ -429,19 +439,28 @@ export async function buildExcelBlob() {
   ws.getRow(currentRow).height = Math.max(25, agendaCount * 20);
   currentRow++;
 
-  // 회의내용
-  ws.mergeCells(currentRow, 2, currentRow, totalCols);
-  ws.getCell(currentRow, 1).value = '회의내용';
-  ws.getCell(currentRow, 1).fill = FILL_HEADER;
-  ws.getCell(currentRow, 1).font = FONT_BOLD;
-  ws.getCell(currentRow, 1).alignment = ALIGN_CENTER;
-  ws.getRow(currentRow).height = 400;
-  const contentCell = ws.getCell(currentRow, 2);
+  // 회의내용 (내용 분량 비례 + 한 행 한계 초과 시 세로 다중 행 병합)
+  const { rowsSpanned, perRowHeight } = computeContentLayout(meeting.minutes, contentCols);
+  const contentStartRow = currentRow;
+  const contentEndRow   = currentRow + rowsSpanned - 1;
+
+  if (rowsSpanned > 1) ws.mergeCells(contentStartRow, 1, contentEndRow, 1);
+  ws.getCell(contentStartRow, 1).value = '회의내용';
+  ws.getCell(contentStartRow, 1).fill = FILL_HEADER;
+  ws.getCell(contentStartRow, 1).font = FONT_BOLD;
+  ws.getCell(contentStartRow, 1).alignment = ALIGN_CENTER;
+
+  ws.mergeCells(contentStartRow, 2, contentEndRow, totalCols);
+  const contentCell = ws.getCell(contentStartRow, 2);
   contentCell.value = meeting.minutes || '';
   contentCell.alignment = { vertical: 'top', horizontal: 'left', wrapText: true };
 
-  // 테두리
-  for (let R = 1; R <= currentRow; R++) {
+  for (let r = contentStartRow; r <= contentEndRow; r++) {
+    ws.getRow(r).height = perRowHeight;
+  }
+
+  // 테두리 (회의내용 마지막 행까지)
+  for (let R = 1; R <= contentEndRow; R++) {
     for (let C = 1; C <= totalCols; C++) {
       const cell = ws.getCell(R, C);
       cell.border = BORDER_THIN;
@@ -455,6 +474,25 @@ export async function buildExcelBlob() {
   });
   const fileName = `${title}_${meeting.date || ''}.xlsx`.replace(/[\\/:*?"<>|]/g, '_');
   return { blob, fileName };
+}
+
+/* ── 회의내용 높이/행 계산 ──
+   내용 분량에 비례한 높이를 구하고, 엑셀 단일 행 한계(약 409pt)를
+   넘으면 여러 행으로 나눠 세로 병합하도록 행 수와 행당 높이를 반환 */
+function computeContentLayout(minutes, contentCols) {
+  const text = minutes || '';
+  // 콘텐츠 가로폭 약 85단위, 한글 ~2단위 → 한 줄에 약 42자
+  const charsPerLine = 42;
+  let visualLines = 0;
+  for (const ln of text.split('\n')) {
+    visualLines += Math.max(1, Math.ceil(ln.length / charsPerLine));
+  }
+  // 줄당 약 16pt + 여유. 최소 400pt 보장(기존 동일)
+  const neededHeight = Math.max(400, visualLines * 16 + 24);
+  const MAX_PER_ROW = 400;                                  // 단일 행 한계(409) 안전값
+  const rowsSpanned = Math.max(1, Math.ceil(neededHeight / MAX_PER_ROW));
+  const perRowHeight = Math.ceil(neededHeight / rowsSpanned);
+  return { rowsSpanned, perRowHeight };
 }
 
 /* ── 날짜 포맷 헬퍼 ── */
