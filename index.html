@@ -699,15 +699,24 @@
   <!-- PWA 서비스 워커 등록 + 오프라인 감지 -->
   <script>
     if ('serviceWorker' in navigator) {
+      let _reloadedBySW = false;
+      // 새 서비스 워커가 제어권을 잡으면 자동으로 한 번 새로고침 (최신 버전 즉시 적용)
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (_reloadedBySW) return;
+        _reloadedBySW = true;
+        window.location.reload();
+      });
+
       navigator.serviceWorker.register('./service-worker.js')
         .then(reg => {
-          // 새 버전 감지 시 자동 업데이트
+          // 주기적으로 업데이트 확인
+          reg.update();
           reg.addEventListener('updatefound', () => {
             const newSW = reg.installing;
             newSW.addEventListener('statechange', () => {
-              if (newSW.state === 'activated' && navigator.serviceWorker.controller) {
-                // 토스트 대신 조용히 로그 (다음 새로고침에 적용)
-                console.log('[PWA] 새 버전이 설치되었습니다.');
+              // 새 버전 설치 완료 + 기존 SW가 제어 중이면 즉시 활성화
+              if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
+                newSW.postMessage({ type: 'SKIP_WAITING' });
               }
             });
           });
