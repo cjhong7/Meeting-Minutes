@@ -213,7 +213,7 @@ export async function exportExcel() {
         const nameRow = currentRow;
         const signRow = currentRow + 1;
 
-        ws.getRow(nameRow).height = 25;
+        ws.getRow(nameRow).height = 45;
         ws.getRow(signRow).height = 45;
 
         const startIndex = r * slotsPerRow;
@@ -396,7 +396,7 @@ export async function buildExcelBlob() {
     attLabel.alignment = ALIGN_CENTER;
     for (let r = 0; r < actualRows; r++) {
       const nameRow = currentRow, signRow = currentRow + 1;
-      ws.getRow(nameRow).height = 25;
+      ws.getRow(nameRow).height = 45;
       ws.getRow(signRow).height = 45;
       const startIndex = r * slotsPerRow;
       for (let c = 0; c < slotsPerRow; c++) {
