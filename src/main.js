@@ -384,8 +384,8 @@ async function onGenerateClick() {
 
   // 입력 검증
   const inputText = getInputTextForCurrentMode();
-  if (!inputText || inputText.trim().length < 10) {
-    showToast('회의 내용을 50자 이상 입력해 주세요.', 'warn');
+  if (!inputText || inputText.trim().length < 30) {
+    showToast('회의 내용을 30자 이상 입력해 주세요.', 'warn');
     return;
   }
 
