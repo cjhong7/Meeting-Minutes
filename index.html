@@ -503,15 +503,14 @@
           <label class="field-label" for="inOpenaiKey">
             OpenAI API Key <small class="key-hint">(sk-...)</small>
           </label>
-          <p class="key-saved-status" id="keyStatusOpenai"></p>
+          <div class="key-mode-row">
+            <label><input type="radio" name="keyModeOpenai" value="persist" checked> 이 기기에서 계속 키 사용</label>
+            <label><input type="radio" name="keyModeOpenai" value="session"> 이번에만 키 사용</label>
+          </div>
           <div class="key-row">
             <input class="field-input" id="inOpenaiKey" type="password"
               placeholder="sk-..." autocomplete="off">
             <button class="btn btn-sm btn-ghost" id="btnShowOpenaiKey" type="button">보기</button>
-          </div>
-          <div class="key-mode-row">
-            <label><input type="radio" name="keyModeOpenai" value="persist" checked> 이 기기에서 계속 키 사용</label>
-            <label><input type="radio" name="keyModeOpenai" value="session"> 이번에만 키 사용</label>
           </div>
         </div>
 
@@ -520,15 +519,14 @@
           <label class="field-label" for="inGeminiKey">
             Gemini API Key <small class="key-hint">(AIzaSy...)</small>
           </label>
-          <p class="key-saved-status" id="keyStatusGemini"></p>
+          <div class="key-mode-row">
+            <label><input type="radio" name="keyModeGemini" value="persist" checked> 이 기기에서 계속 키 사용</label>
+            <label><input type="radio" name="keyModeGemini" value="session"> 이번에만 키 사용</label>
+          </div>
           <div class="key-row">
             <input class="field-input" id="inGeminiKey" type="password"
               placeholder="AIzaSy..." autocomplete="off">
             <button class="btn btn-sm btn-ghost" id="btnShowGeminiKey" type="button">보기</button>
-          </div>
-          <div class="key-mode-row">
-            <label><input type="radio" name="keyModeGemini" value="persist" checked> 이 기기에서 계속 키 사용</label>
-            <label><input type="radio" name="keyModeGemini" value="session"> 이번에만 키 사용</label>
           </div>
         </div>
 
@@ -537,15 +535,14 @@
           <label class="field-label" for="inClaudeKey">
             Claude API Key <small class="key-hint">(sk-ant-...)</small>
           </label>
-          <p class="key-saved-status" id="keyStatusClaude"></p>
+          <div class="key-mode-row">
+            <label><input type="radio" name="keyModeClaude" value="persist" checked> 이 기기에서 계속 키 사용</label>
+            <label><input type="radio" name="keyModeClaude" value="session"> 이번에만 키 사용</label>
+          </div>
           <div class="key-row">
             <input class="field-input" id="inClaudeKey" type="password"
               placeholder="sk-ant-..." autocomplete="off">
             <button class="btn btn-sm btn-ghost" id="btnShowClaudeKey" type="button">보기</button>
-          </div>
-          <div class="key-mode-row">
-            <label><input type="radio" name="keyModeClaude" value="persist" checked> 이 기기에서 계속 키 사용</label>
-            <label><input type="radio" name="keyModeClaude" value="session"> 이번에만 키 사용</label>
           </div>
         </div>
 

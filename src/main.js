@@ -618,17 +618,7 @@ async function syncAiSettingsModal() {
       const saved  = await hasKey(eng);              // 영구 또는 세션 키 존재 여부
       const persisted = await isPersisted(eng);      // 영구 저장 여부
       const pinSet = persisted && (await needsPin(eng));
-      const statusEl = document.getElementById(`keyStatus${label}`);
       const inputEl  = document.getElementById(`in${label}Key`);
-
-      // 상태 배지 표시 ('저장된 키 없음'은 표시 안 함)
-      if (statusEl) {
-        if (persisted && pinSet)  statusEl.textContent = '✅ 키 저장됨  🔒 PIN 설정됨';
-        else if (persisted)       statusEl.textContent = '✅ 키 저장됨 (이 기기에 보관)';
-        else if (saved)           statusEl.textContent = '🟡 이번 세션만 사용 중 (브라우저 닫으면 사라짐)';
-        else                      statusEl.textContent = '';
-        statusEl.className = (persisted || saved) ? 'key-saved-status key-status-ok' : 'key-saved-status';
-      }
 
       // 저장된 키를 입력 필드에 복원 (PIN 없는 키만 / 세션 키 포함)
       if (inputEl && saved && !pinSet) {
