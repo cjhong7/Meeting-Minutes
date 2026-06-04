@@ -253,7 +253,7 @@ async function ocrWithOpenAI(base64, apiKey) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
     body: JSON.stringify({
-      model: appState.aiQuality === 'high' ? 'gpt-4o' : 'gpt-4o-mini',
+      model: localStorage.getItem('anti_model_openai') || 'gpt-4.1-mini',
       messages: [{ role: 'user', content: [
         { type: 'text', text: OCR_PROMPT },
         { type: 'image_url', image_url: { url: `data:image/png;base64,${base64}` } },
@@ -267,7 +267,8 @@ async function ocrWithOpenAI(base64, apiKey) {
 }
 
 async function ocrWithGemini(base64, apiKey) {
-  const model = appState.aiQuality === 'high' ? 'gemini-2.5-pro' : 'gemini-2.5-flash';
+  let model = localStorage.getItem('anti_model_gemini') || 'gemini-2.5-flash';
+  if (model.includes('2.0')) model = 'gemini-2.5-flash';
   const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -284,7 +285,7 @@ async function ocrWithGemini(base64, apiKey) {
 }
 
 async function ocrWithClaude(base64, apiKey) {
-  const model = appState.aiQuality === 'high' ? 'claude-sonnet-4-20250514' : 'claude-haiku-4-20250414';
+  const model = localStorage.getItem('anti_model_claude') || 'claude-haiku-4-20250414';
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {

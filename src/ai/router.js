@@ -20,7 +20,7 @@ import { simulate } from './simulator.js';
 
 /** 기본 모델 (사용자가 선택하지 않은 경우 사용) */
 const DEFAULT_MODEL = {
-  openai: 'gpt-4o-mini',
+  openai: 'gpt-4.1-mini',
   gemini: 'gemini-2.5-pro',
   claude: 'claude-haiku-4-20250414',
 };
@@ -32,6 +32,11 @@ function getSelectedModel(engine) {
   if (engine === 'gemini' && model.includes('2.0')) {
     model = 'gemini-2.5-flash';
     localStorage.setItem('anti_model_gemini', model);
+  }
+  // 제거된 OpenAI 4o 계열은 4.1 계열로 대체
+  if (engine === 'openai' && model.includes('4o')) {
+    model = model.includes('mini') ? 'gpt-4.1-mini' : 'gpt-4.1';
+    localStorage.setItem('anti_model_openai', model);
   }
   return model;
 }
