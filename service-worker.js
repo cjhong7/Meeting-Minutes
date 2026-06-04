@@ -20,7 +20,7 @@
  *  - 펜 OCR
  */
 
-const CACHE_NAME = 'anti-conver-v34';
+const CACHE_NAME = 'anti-conver-v35';
 
 /* 앱 셸 사전 캐시 목록 */
 const SHELL_FILES = [
@@ -109,32 +109,25 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // 3) 앱 셸 → Stale-While-Revalidate
-  //    캐시된 응답 즉시 반환 + 백그라운드에서 네트워크 업데이트
+  // 3) 앱 셸(HTML/CSS/JS) → Network-First
+  //    온라인이면 항상 최신 코드, 오프라인이면 캐시 사용
+  //    (캐시 누적으로 옛 버전이 계속 뜨던 문제 방지)
   event.respondWith(
-    caches.match(event.request).then(cached => {
-      const networkFetch = fetch(event.request).then(response => {
-        if (
-          event.request.method === 'GET' &&
-          response.status === 200 &&
-          response.type !== 'opaque'
-        ) {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
-        }
-        return response;
-      }).catch(() => null);
-
-      // 캐시 있으면 즉시 반환 (백그라운드 업데이트)
-      if (cached) {
-        networkFetch; // 백그라운드 리밸리데이트
-        return cached;
+    fetch(event.request).then(response => {
+      // 성공한 GET 응답을 캐시에 갱신
+      if (
+        event.request.method === 'GET' &&
+        response.status === 200 &&
+        response.type !== 'opaque'
+      ) {
+        const clone = response.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
       }
-
-      // 캐시 없으면 네트워크 대기
-      return networkFetch.then(res => {
-        if (res) return res;
-        // 오프라인 + 캐시 없음 → 네비게이션이면 index.html 폴백
+      return response;
+    }).catch(() => {
+      // 오프라인 → 캐시 폴백
+      return caches.match(event.request).then(cached => {
+        if (cached) return cached;
         if (event.request.mode === 'navigate') {
           return caches.match('./index.html');
         }
