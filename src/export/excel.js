@@ -64,8 +64,8 @@ function downloadBlob(blob, filename) {
 
 const A4_SAFE_H   = 755;   // A4 인쇄 가능 높이 (상하 마진 각 0.5in, 안전 여유 15pt)
 const EXCEL_MAX_R = 400;   // Excel 단일 행 안전 높이 상한 (실제 한계 409pt)
-const LINE_H      = 13;    // 줄당 높이(pt) — Dotum 11pt 실측 기준 (11pt × 행간 ≈ 13pt)
-const CHARS       = 42;    // 한 줄 기준 글자 수 — 콘텐츠 열 실폭 468pt ÷ 11pt ≈ 42자
+const LINE_H      = 11;    // 줄당 높이(pt) — Excel Dotum 11pt 실제 렌더링 기준 (폰트 크기 = 행 높이)
+const CHARS       = 50;    // 한 줄 기준 글자 수 — 과대 줄바꿈 추정 방지 (45-50자 줄 단일 처리)
 const CELL_PAD    = 8;     // 셀 내부 상하 최소 여백(pt)
 
 /**
