@@ -606,8 +606,29 @@ async function syncAiSettingsModal() {
   // 저장된 모델 선택값 복원
   ['openai', 'gemini', 'claude'].forEach(eng => {
     const saved = localStorage.getItem(`anti_model_${eng}`);
-    const sel = document.getElementById(`sel${eng.charAt(0).toUpperCase() + eng.slice(1)}Model`);
-    if (sel && saved) sel.value = saved;
+    const label = eng.charAt(0).toUpperCase() + eng.slice(1);
+    const sel   = document.getElementById(`sel${label}Model`);
+    const customInput = document.getElementById(`custom${label}Model`);
+    if (!sel || !saved) return;
+    // 저장값이 드롭다운 옵션에 있으면 그대로 선택, 없으면 직접입력 모드
+    const hasOption = Array.from(sel.options).some(o => o.value === saved);
+    if (hasOption) {
+      sel.value = saved;
+    } else {
+      sel.value = '__custom__';
+      if (customInput) { customInput.value = saved; customInput.hidden = false; }
+    }
+  });
+  // 드롭다운 변경 시 직접입력 창 토글
+  ['openai', 'gemini', 'claude'].forEach(eng => {
+    const label = eng.charAt(0).toUpperCase() + eng.slice(1);
+    const sel   = document.getElementById(`sel${label}Model`);
+    const customInput = document.getElementById(`custom${label}Model`);
+    if (!sel || !customInput) return;
+    sel.addEventListener('change', () => {
+      customInput.hidden = sel.value !== '__custom__';
+      if (!customInput.hidden) customInput.focus();
+    });
   });
 
   // 키 복원 (비동기)
@@ -699,11 +720,16 @@ async function saveAiSettings() {
     // 엔진·모델 설정 localStorage에 보관
     localStorage.setItem('anti_conver_engine', engine);
 
-    // 각 엔진별 선택 모델 저장
+    // 각 엔진별 선택 모델 저장 (직접입력 시 텍스트값 사용)
     ['openai', 'gemini', 'claude'].forEach(eng => {
       const label = eng.charAt(0).toUpperCase() + eng.slice(1);
       const sel   = document.getElementById(`sel${label}Model`);
-      if (sel?.value) localStorage.setItem(`anti_model_${eng}`, sel.value);
+      const customInput = document.getElementById(`custom${label}Model`);
+      if (!sel) return;
+      const modelVal = sel.value === '__custom__'
+        ? (customInput?.value?.trim() || '')
+        : sel.value;
+      if (modelVal) localStorage.setItem(`anti_model_${eng}`, modelVal);
     });
   } catch (err) {
     console.error('[AI Settings]', err);

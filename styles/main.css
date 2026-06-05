@@ -1030,8 +1030,25 @@ a { color: var(--blue); }
   border-color: var(--blue);
   box-shadow: 0 0 0 2px var(--blue-light);
 }
+.model-custom-input {
+  flex-shrink: 0;
+  margin-right: 10px;
+  margin-top: 4px;
+  padding: 5px 8px;
+  font-size: 12px;
+  border: 1px solid var(--blue);
+  border-radius: var(--radius-sm);
+  background: var(--panel);
+  color: var(--ink);
+  width: 240px;
+  outline: none;
+}
+.model-custom-input:focus {
+  box-shadow: 0 0 0 2px var(--blue-light);
+}
 @media (max-width: 767px) {
   .model-inline-select { width: 160px; font-size: 11px; }
+  .model-custom-input  { width: 160px; font-size: 11px; }
 }
 
 .engine-key-field { margin-top: -6px; }
