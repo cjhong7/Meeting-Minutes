@@ -51,22 +51,22 @@ function downloadBlob(blob, filename) {
 /* ================================================================
    페이지 인식 회의내용 레이아웃
    ================================================================
-   A4 인쇄 가능 높이(A4_SAFE_H ≈ 720pt)를 기준으로 텍스트를 분할.
+   A4 인쇄 가능 높이(A4_SAFE_H)를 기준으로 텍스트를 분할.
    각 청크는 하나의 페이지 안에서 완결되므로 어떤 행도 페이지를 걸치지 않음.
    청크 간에 ExcelJS 명시적 페이지 구분선을 삽입한다.
 
-   계산 기준 (현행 pageSetup 기준):
-     A4 높이         = 841.89pt
-     상·하 마진(0.5in × 2) = 72pt
-     헤더·푸터(0.3in × 2) = 43.2pt
-     인쇄 가능 영역   ≈ 726.7pt → 안전 여유 6pt 뺀 720pt 사용
+   ▶ 마진 계산 (현행 pageSetup 기준):
+     A4 높이                = 841.89pt
+     상·하 content 마진(0.5in × 2) = 72pt  ← 헤더·푸터는 이 안에 포함
+     인쇄 가능 영역         ≈ 769.89pt → 안전 여유 15pt 뺀 755pt 사용
+     ※ header/footer margin은 content 영역을 줄이지 않음 (마진 내부에 배치)
    ================================================================ */
 
-const A4_SAFE_H   = 720;   // A4 인쇄 가능 높이 (안전 여유 포함)
+const A4_SAFE_H   = 755;   // A4 인쇄 가능 높이 (상하 마진 각 0.5in, 안전 여유 15pt)
 const EXCEL_MAX_R = 400;   // Excel 단일 행 안전 높이 상한 (실제 한계 409pt)
 const LINE_H      = 16;    // 줄당 높이(pt)
 const CHARS       = 42;    // 한 줄 기준 글자 수 (가로폭 약 85단위, 한글 ~2단위)
-const CELL_PAD    = 24;    // 셀 내부 상하 여백(pt)
+const CELL_PAD    = 8;     // 셀 내부 상하 최소 여백(pt)
 
 /**
  * 텍스트를 A4 페이지 단위 청크로 분할
@@ -110,12 +110,15 @@ function computePageAwareChunks(text, headerHeight) {
       lineIdx++;
     }
 
-    // 청크 높이 계산 (콘텐츠 기반, 최대 pageSpace 이하)
+    // 청크 높이 계산
+    //  - 마지막 청크: 콘텐츠 분량만큼만
+    //  - 중간 청크 : 페이지를 꽉 채움 → 1페이지 하단에 빈 줄 없이 내용이 가득 찬 후 다음 페이지 이동
+    const isLastChunk = lineIdx >= measuredLines.length;
     const rawH   = Math.max(
       isFirst ? Math.min(page1Space, 200) : 200,
       usedVl * LINE_H + CELL_PAD
     );
-    const chunkH = Math.min(rawH, pageSpace);
+    const chunkH = isLastChunk ? Math.min(rawH, pageSpace) : pageSpace;
 
     // EXCEL_MAX_R 초과 시 여러 행으로 균등 분산 (청크 내부는 페이지 경계 없으므로 안전)
     const numRows = Math.max(1, Math.ceil(chunkH / EXCEL_MAX_R));
