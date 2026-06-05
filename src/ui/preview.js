@@ -80,7 +80,52 @@ function updateAgendas() {
    협의록 본문 표시 / 숨기기
    ============================================================ */
 
-/** 생성된 협의록 본문을 2쪽에 표시 */
+/* ── 화면 페이지 분할 상수 ──
+   Malgun Gothic 13px, line-height 1.75 기준 추정값.
+   1페이지: 상단 헤더 테이블(제목·일시·참석자·안건)이 공간을 차지하므로 줄 수 감소.
+   2페이지~: 전체 사용. */
+const SCREEN_CHARS       = 44;   // 화면 1줄 기준 글자 수
+const SCREEN_FIRST_LINES = 28;   // 1페이지 회의내용 최대 줄 수
+const SCREEN_FULL_LINES  = 42;   // 2페이지 이상 최대 줄 수
+
+/** 텍스트를 화면 페이지 단위로 분할 */
+function splitIntoPages(text) {
+  const rawLines = (text || '').split('\n');
+  const measured = rawLines.map(ln => ({
+    text: ln,
+    vl: Math.max(1, Math.ceil(ln.length / SCREEN_CHARS)),
+  }));
+
+  const pages = [];
+  let cur = [];
+  let usedVl = 0;
+  let isFirst = true;
+
+  for (const line of measured) {
+    const limit = isFirst ? SCREEN_FIRST_LINES : SCREEN_FULL_LINES;
+    if (usedVl + line.vl > limit && cur.length > 0) {
+      pages.push(cur.join('\n'));
+      cur = [line.text];
+      usedVl = line.vl;
+      isFirst = false;
+    } else {
+      cur.push(line.text);
+      usedVl += line.vl;
+    }
+  }
+  if (cur.length > 0) pages.push(cur.join('\n'));
+  return pages.length ? pages : [''];
+}
+
+/** HTML 특수문자 이스케이프 (개행 유지, <br> 미변환) */
+function escRaw(str) {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+/** 생성된 협의록 본문을 2쪽에 표시 (화면 페이지 구분선 포함) */
 export function showMinutes(text) {
   const placeholder = document.getElementById('minutesPlaceholder');
   const content     = document.getElementById('minutesContent');
@@ -88,7 +133,23 @@ export function showMinutes(text) {
 
   placeholder.hidden = true;
   content.hidden = false;
-  content.textContent = text;
+
+  const pages = splitIntoPages(text);
+  if (pages.length <= 1) {
+    // 단일 페이지: 기존 방식
+    content.textContent = text;
+  } else {
+    // 다중 페이지: 페이지 사이에 시각적 구분선 삽입
+    content.innerHTML = pages
+      .map((pageText, i) => {
+        const body = escRaw(pageText);
+        const sep  = i < pages.length - 1
+          ? `<span class="screen-page-sep">${i + 2}페이지</span>`
+          : '';
+        return body + sep;
+      })
+      .join('');
+  }
 }
 
 /** 협의록 본문을 초기 플레이스홀더 상태로 되돌리기 */
