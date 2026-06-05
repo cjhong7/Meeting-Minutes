@@ -98,7 +98,8 @@ function computePageAwareChunks(text, headerHeight) {
     const pageSpace = isFirst ? page1Space : A4_SAFE_H;
     const linesCap  = Math.max(2, Math.floor((pageSpace - CELL_PAD) / LINE_H));
 
-    // ── 1단계: linesCap 까지 최대한 수집 ──
+    // 줄(문장) 단위로 linesCap 까지 수집 — 각 줄이 하나의 문장 단위이므로
+    // 줄 끝에서 바로 분리 (절 마커 등 별도 경계 탐색 없음)
     const chunkLines = [];
     let usedVl = 0;
     while (lineIdx < measuredLines.length) {
@@ -107,25 +108,6 @@ function computePageAwareChunks(text, headerHeight) {
       chunkLines.push(l.text);
       usedVl += l.vl;
       lineIdx++;
-    }
-
-    // ── 2단계: 문단 경계까지 추가 수집 (최대 6줄) ──
-    // linesCap 도달 후 바로 자르지 않고 자연스러운 문단 끝까지 이어서 채움.
-    // 자연 경계: 빈 줄 / 절 마커(가.나.다. / [안내사항] / 숫자.) 직전
-    if (lineIdx < measuredLines.length) {
-      const LOOKAHEAD = 6;
-      for (let extra = 0; extra < LOOKAHEAD && lineIdx < measuredLines.length; extra++) {
-        const l = measuredLines[lineIdx];
-        const isBreak =
-          l.text.trim() === '' ||
-          /^\s*[가나다라마바사아자차카타파하]\.\s/.test(l.text) ||
-          /^\s*\[/.test(l.text) ||
-          /^\s*\d+\.\s/.test(l.text);
-        if (isBreak) break;          // 자연 경계 직전 → 여기서 청크 종료
-        chunkLines.push(l.text);
-        usedVl += l.vl;
-        lineIdx++;
-      }
     }
 
     // 청크 높이 계산
