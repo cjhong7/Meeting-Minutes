@@ -316,6 +316,7 @@ async function buildWorkbookBuffer(meeting) {
     ws.mergeCells(cStart, 2, cEnd, totalCols);
     const cc = ws.getCell(cStart, 2);
     cc.value     = chunkText;
+    cc.font      = { name: '돋움', size: 11 };
     cc.alignment = { vertical: 'top', horizontal: 'left', wrapText: true };
 
     /* 행 높이 */
