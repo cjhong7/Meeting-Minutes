@@ -65,7 +65,7 @@ function downloadBlob(blob, filename) {
 const A4_SAFE_H   = 755;   // A4 인쇄 가능 높이 (상하 마진 각 0.5in, 안전 여유 15pt)
 const EXCEL_MAX_R = 400;   // Excel 단일 행 안전 높이 상한 (실제 한계 409pt)
 const LINE_H      = 16;    // 줄당 높이(pt)
-const CHARS       = 42;    // 한 줄 기준 글자 수 (가로폭 약 85단위, 한글 ~2단위)
+const CHARS       = 48;    // 한 줄 기준 글자 수 (콘텐츠 열 너비 실측 기준 보정, 한글 11pt 기준)
 const CELL_PAD    = 8;     // 셀 내부 상하 최소 여백(pt)
 
 /**
@@ -98,16 +98,34 @@ function computePageAwareChunks(text, headerHeight) {
     const pageSpace = isFirst ? page1Space : A4_SAFE_H;
     const linesCap  = Math.max(2, Math.floor((pageSpace - CELL_PAD) / LINE_H));
 
-    // 이 페이지에 들어갈 줄 수집
+    // ── 1단계: linesCap 까지 최대한 수집 ──
     const chunkLines = [];
     let usedVl = 0;
     while (lineIdx < measuredLines.length) {
       const l = measuredLines[lineIdx];
-      // 이미 내용이 있으면 용량 초과 시 다음 청크로
       if (usedVl + l.vl > linesCap && chunkLines.length > 0) break;
       chunkLines.push(l.text);
       usedVl += l.vl;
       lineIdx++;
+    }
+
+    // ── 2단계: 문단 경계까지 추가 수집 (최대 6줄) ──
+    // linesCap 도달 후 바로 자르지 않고 자연스러운 문단 끝까지 이어서 채움.
+    // 자연 경계: 빈 줄 / 절 마커(가.나.다. / [안내사항] / 숫자.) 직전
+    if (lineIdx < measuredLines.length) {
+      const LOOKAHEAD = 6;
+      for (let extra = 0; extra < LOOKAHEAD && lineIdx < measuredLines.length; extra++) {
+        const l = measuredLines[lineIdx];
+        const isBreak =
+          l.text.trim() === '' ||
+          /^\s*[가나다라마바사아자차카타파하]\.\s/.test(l.text) ||
+          /^\s*\[/.test(l.text) ||
+          /^\s*\d+\.\s/.test(l.text);
+        if (isBreak) break;          // 자연 경계 직전 → 여기서 청크 종료
+        chunkLines.push(l.text);
+        usedVl += l.vl;
+        lineIdx++;
+      }
     }
 
     // 청크 높이 계산
