@@ -827,7 +827,7 @@ a { color: var(--blue); }
 
 /* 추가 페이지 블록 (2페이지~): .paper 와 동일한 스타일, 헤더 없이 본문만 */
 .extra-page {
-  min-height: 200px;
+  min-height: 600px;
 }
 
 /* ── 미리보기 하단 바 ── */
