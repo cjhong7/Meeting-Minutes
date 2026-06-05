@@ -78,6 +78,59 @@ a { color: var(--blue); }
   gap: 8px;
 }
 
+/* ── 사용 순서 4단계 가이드 ── */
+.usage-steps {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  list-style: none;
+  margin: 0;
+  padding: 6px 12px;
+  background: rgba(255,255,255,0.12);
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.2);
+}
+.usage-step {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.step-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.9);
+  color: var(--blue);
+  font-size: 11px;
+  font-weight: 800;
+  flex-shrink: 0;
+  line-height: 1;
+}
+.step-text {
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.95);
+  white-space: nowrap;
+}
+.step-sep {
+  color: rgba(255,255,255,0.45);
+  font-size: 15px;
+  font-weight: 300;
+  line-height: 1;
+  list-style: none;
+  padding: 0 1px;
+}
+@media (max-width: 900px) {
+  .step-text { display: none; }
+  .usage-steps { gap: 6px; padding: 6px 10px; }
+}
+@media (max-width: 600px) {
+  .usage-steps { display: none; }
+}
+
 .app-icon {
   font-size: 20px;
   line-height: 1;
