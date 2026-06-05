@@ -28,6 +28,10 @@ export function buildPrompt({ text, mode = 'typing', title = '', date = '', agen
   const isPlanning = mode === 'plan';
   const vars = isPlanning ? MODE_VARS.plan : MODE_VARS.meeting;
 
+  // 타자·계획서 기반은 기본적으로 section2(전달사항/안내사항)를 생성하지 않음
+  // 녹음·펜 기반만 section2 포함 (특별 요청 없을 때 기본값)
+  const showSection2 = mode === 'voice' || mode === 'pen';
+
   const titleLabel = title.trim() || vars.type;
   const dateStr    = formatDate(date || todayIso());
 
@@ -51,10 +55,10 @@ ${hasAgendas
 ${validAgendas.map((a, i) => `  ${i + 1}. ${a}`).join('\n')}
 
 반드시 위 안건 제목을 [${vars.section1}]의 1단계 번호(1. 2. 3.)로 사용하고,
-각 안건 아래에 해당하는 회의 내용을 가. 나. 다. 로 분류·정리해 주세요.
-회의 내용 중 안건과 직접 관련 없는 전달·공지 사항은 [${vars.section2}]로 분리하세요.`
-  : `회의 내용에서 주요 안건을 파악하여 [${vars.section1}]에 번호별로 정리하고,
-전달·공지 사항은 [${vars.section2}]로 분리해 주세요.`}
+각 안건 아래에 해당하는 회의 내용을 가. 나. 다. 로 분류·정리해 주세요.${showSection2 ? `
+회의 내용 중 안건과 직접 관련 없는 전달·공지 사항은 [${vars.section2}]로 분리하세요.` : ''}`
+  : `회의 내용에서 주요 안건을 파악하여 [${vars.section1}]에 번호별로 정리해 주세요.${showSection2 ? `
+전달·공지 사항은 [${vars.section2}]로 분리해 주세요.` : ''}`}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 [출력 양식]
@@ -64,10 +68,10 @@ ${validAgendas.map((a, i) => `  ${i + 1}. ${a}`).join('\n')}
 
 [${vars.section1}]
 ${agendaExample}
-
+${showSection2 ? `
 [${vars.section2}]
 1. 전달 항목
-  가. 세부 내용
+  가. 세부 내용` : ''}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 [작성 규칙]
@@ -75,8 +79,8 @@ ${agendaExample}
 
 1. 안건 중심 구조화
    - [${vars.section1}]의 1단계 번호(1. 2. 3.)는 반드시 안건 제목으로 사용
-   - 각 안건 아래 관련 논의·결정 내용을 가. 나. 다.로 세분화
-   - 안건과 무관한 전달 사항은 [${vars.section2}]로 분리
+   - 각 안건 아래 관련 논의·결정 내용을 가. 나. 다.로 세분화${showSection2 ? `
+   - 안건과 무관한 전달 사항은 [${vars.section2}]로 분리` : ''}
    - 안건이 1개뿐이면 1번 하나만 작성
 
 2. 번호 체계 (개조식 3단계)
