@@ -382,6 +382,13 @@ function bindGenerateBtn() {
 async function onGenerateClick() {
   const { mode, typingText, title, date } = appState.meeting;
 
+  // 안건 입력 검증
+  const validAgendas = appState.meeting.agendas.filter(a => a.trim());
+  if (validAgendas.length === 0) {
+    showToast('안건 내용을 입력해 주세요.', 'warn');
+    return;
+  }
+
   // 입력 검증
   const inputText = getInputTextForCurrentMode();
   if (!inputText || inputText.trim().length < 30) {
