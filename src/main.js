@@ -603,6 +603,19 @@ async function syncAiSettingsModal() {
   updateKeyFieldsVisibility(engine);
   updateUsageDisplay();
 
+  // 구버전 모델 ID → 현재 ID 자동 마이그레이션
+  const MODEL_MIGRATIONS = {
+    'claude-haiku-4-20250414':  'claude-haiku-4-5-20251001',
+    'claude-sonnet-4-20250514': 'claude-sonnet-4-6',
+    'claude-opus-4-5':          'claude-opus-4-8',
+  };
+  ['openai', 'gemini', 'claude'].forEach(eng => {
+    const saved = localStorage.getItem(`anti_model_${eng}`);
+    if (saved && MODEL_MIGRATIONS[saved]) {
+      localStorage.setItem(`anti_model_${eng}`, MODEL_MIGRATIONS[saved]);
+    }
+  });
+
   // 저장된 모델 선택값 복원
   ['openai', 'gemini', 'claude'].forEach(eng => {
     const saved = localStorage.getItem(`anti_model_${eng}`);
