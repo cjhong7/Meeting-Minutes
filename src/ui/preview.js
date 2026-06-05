@@ -85,8 +85,8 @@ function updateAgendas() {
    1페이지: 상단 헤더 테이블(제목·일시·참석자·안건)이 공간을 차지하므로 줄 수 감소.
    2페이지~: 전체 사용. */
 const SCREEN_CHARS       = 50;   // 인쇄 기준 한 줄 글자 수 (텍스트 폭 507pt ÷ 10pt)
-const SCREEN_FIRST_LINES = 31;   // 1페이지 가용 높이 558pt ÷ 줄높이 17.5pt
-const SCREEN_FULL_LINES  = 43;   // 2페이지 이상 762pt ÷ 17.5pt
+const SCREEN_FIRST_LINES = 40;   // 화면 1페이지 줄 수 (인쇄 32줄 × 화면 보정 1.25배)
+const SCREEN_FULL_LINES  = 52;   // 화면 2페이지~ 줄 수 (인쇄 43줄 × 보정 1.2배)
 
 /** 텍스트를 화면 페이지 단위로 분할 */
 function splitIntoPages(text) {
