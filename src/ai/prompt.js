@@ -142,6 +142,17 @@ ${showSection2 ? `
 - 불필요하게 길게 늘이지 말고 요점 위주로 정리`
     : '';
 
+  // ── 계획서 기반: 소폭 간략 작성 ──
+  const planNote = isPlanning ? `
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[계획서 기반 분량 조정]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- 각 안건의 세부 항목(가.나.다.)은 4개 이내로 작성
+- 각 항목의 확장 측면은 4개 이내로 작성
+- 핵심 내용은 충실히 담되 불필요한 부연 설명은 생략
+- 전체 분량은 타자 기반보다 약간 짧게 유지` : '';
+
   // ── 모델 등급별 상세도 (pro = 고품질·정교, flash = 간결) ──
   let tierNote = '';
   if (model.includes('2.5-pro')) {
@@ -164,7 +175,7 @@ ${showSection2 ? `
 
   const user = `[회의 내용]\n${text}`;
 
-  return { system: system + penNote + concise + tierNote, user };
+  return { system: system + penNote + planNote + concise + tierNote, user };
 }
 
 function formatDate(iso) {
