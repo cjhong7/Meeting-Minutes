@@ -20,7 +20,7 @@
  *  - 펜 OCR
  */
 
-const CACHE_NAME = 'anti-conver-v61';
+const CACHE_NAME = 'anti-conver-v62';
 
 /* 앱 셸 사전 캐시 목록 */
 const SHELL_FILES = [

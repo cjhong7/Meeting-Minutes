@@ -84,9 +84,9 @@ function updateAgendas() {
    Malgun Gothic 13px, line-height 1.75 기준 추정값.
    1페이지: 상단 헤더 테이블(제목·일시·참석자·안건)이 공간을 차지하므로 줄 수 감소.
    2페이지~: 전체 사용. */
-const SCREEN_CHARS       = 44;   // 화면 1줄 기준 글자 수
-const SCREEN_FIRST_LINES = 28;   // 1페이지 회의내용 최대 줄 수
-const SCREEN_FULL_LINES  = 42;   // 2페이지 이상 최대 줄 수
+const SCREEN_CHARS       = 50;   // 인쇄 기준 한 줄 글자 수 (텍스트 폭 507pt ÷ 10pt)
+const SCREEN_FIRST_LINES = 31;   // 1페이지 가용 높이 558pt ÷ 줄높이 17.5pt
+const SCREEN_FULL_LINES  = 43;   // 2페이지 이상 762pt ÷ 17.5pt
 
 /** 텍스트를 화면 페이지 단위로 분할 */
 function splitIntoPages(text) {
@@ -144,7 +144,7 @@ export function showMinutes(text) {
       .map((pageText, i) => {
         const body = escRaw(pageText);
         const sep  = i < pages.length - 1
-          ? `<span class="screen-page-sep">${i + 2}페이지</span>`
+          ? `<span class="screen-page-sep"></span>`
           : '';
         return body + sep;
       })
