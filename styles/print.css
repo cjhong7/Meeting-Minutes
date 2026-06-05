@@ -240,6 +240,18 @@ body {
   page-break-inside: auto;
 }
 
+/* 추가 페이지 블록(2페이지~): 인쇄 시 새 쪽에서 시작, 화면 장식 제거 */
+.extra-page {
+  page-break-before: always !important;
+  break-before: page !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  padding: 0 2pt !important;
+  margin: 0 !important;
+  min-height: auto !important;
+}
+
 /* 안건 항목 줄 단위에서 찢어지지 않도록 */
 .agenda-pv-item {
   display: block !important;

@@ -825,19 +825,9 @@ a { color: var(--blue); }
   word-break: keep-all;
 }
 
-/* 화면 페이지 구분선 (인쇄 시 숨김) */
-.screen-page-sep {
-  display: block;
-  height: 18px;
-  background: #e8ecf1;
-  border-top: 1.5px solid #b0bcc8;
-  border-bottom: 1.5px solid #b0bcc8;
-  margin: 6px -10px;
-  white-space: normal;
-}
-
-@media print {
-  .screen-page-sep { display: none; }
+/* 추가 페이지 블록 (2페이지~): .paper 와 동일한 스타일, 헤더 없이 본문만 */
+.extra-page {
+  min-height: 200px;
 }
 
 /* ── 미리보기 하단 바 ── */

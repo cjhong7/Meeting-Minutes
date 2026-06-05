@@ -125,30 +125,35 @@ function escRaw(str) {
     .replace(/>/g, '&gt;');
 }
 
-/** 생성된 협의록 본문을 2쪽에 표시 (화면 페이지 구분선 포함) */
+/** 생성된 협의록 본문을 2쪽에 표시 (다중 페이지는 별도 paper 블록으로 분리) */
 export function showMinutes(text) {
-  const placeholder = document.getElementById('minutesPlaceholder');
-  const content     = document.getElementById('minutesContent');
+  const placeholder   = document.getElementById('minutesPlaceholder');
+  const content       = document.getElementById('minutesContent');
+  const previewScroll = document.querySelector('.preview-scroll');
   if (!placeholder || !content) return;
+
+  // 이전 렌더링에서 남은 추가 페이지 제거
+  document.querySelectorAll('.extra-page').forEach(el => el.remove());
 
   placeholder.hidden = true;
   content.hidden = false;
 
   const pages = splitIntoPages(text);
-  if (pages.length <= 1) {
-    // 단일 페이지: 기존 방식
-    content.textContent = text;
-  } else {
-    // 다중 페이지: 페이지 사이에 시각적 구분선 삽입
-    content.innerHTML = pages
-      .map((pageText, i) => {
-        const body = escRaw(pageText);
-        const sep  = i < pages.length - 1
-          ? `<span class="screen-page-sep"></span>`
-          : '';
-        return body + sep;
-      })
-      .join('');
+
+  // 1페이지: 기존 minutesContent(#paper 안)에 표시
+  content.textContent = pages[0];
+
+  // 2페이지 이상: .preview-scroll 안에 별도 .paper 블록 추가
+  if (pages.length > 1 && previewScroll) {
+    pages.slice(1).forEach(pageText => {
+      const pageDiv = document.createElement('div');
+      pageDiv.className = 'paper extra-page';
+      const pre = document.createElement('pre');
+      pre.className = 'minutes-content';
+      pre.textContent = pageText;
+      pageDiv.appendChild(pre);
+      previewScroll.appendChild(pageDiv);
+    });
   }
 }
 
@@ -157,6 +162,9 @@ export function clearMinutes() {
   const placeholder = document.getElementById('minutesPlaceholder');
   const content     = document.getElementById('minutesContent');
   if (!placeholder || !content) return;
+
+  // 추가 페이지 블록 제거
+  document.querySelectorAll('.extra-page').forEach(el => el.remove());
 
   placeholder.hidden = false;
   content.hidden = true;
