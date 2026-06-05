@@ -825,10 +825,7 @@ a { color: var(--blue); }
   word-break: keep-all;
 }
 
-/* 추가 페이지 블록 (2페이지~): .paper 와 동일한 스타일, 헤더 없이 본문만 */
-.extra-page {
-  min-height: 600px;
-}
+/* .extra-page: 현재 미사용 (화면 페이지 분할 제거됨, 인쇄는 print.css에서 처리) */
 
 /* ── 미리보기 하단 바 ── */
 .preview-bar {

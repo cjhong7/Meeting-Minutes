@@ -234,10 +234,14 @@ body {
   break-after: avoid !important;
 }
 
-/* 협의록 본문은 자연스럽게 다음 쪽으로 넘어감 */
+/* 협의록 본문: 자연스럽게 다음 쪽으로 넘어감
+   box-decoration-break: clone → 다음 쪽에도 테두리·패딩 반복 (2쪽 테두리 표시) */
 .minutes-body {
   page-break-before: auto;
   page-break-inside: auto;
+  -webkit-box-decoration-break: clone !important;
+  box-decoration-break: clone !important;
+  border: 1pt solid #2d3542 !important;  /* 모든 쪽에 테두리 */
 }
 
 /* 추가 페이지 블록(2페이지~): 인쇄 시 새 쪽에서 시작, 화면 장식 제거 */

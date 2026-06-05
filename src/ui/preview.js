@@ -80,81 +80,18 @@ function updateAgendas() {
    협의록 본문 표시 / 숨기기
    ============================================================ */
 
-/* ── 화면 페이지 분할 상수 ──
-   Malgun Gothic 13px, line-height 1.75 기준 추정값.
-   1페이지: 상단 헤더 테이블(제목·일시·참석자·안건)이 공간을 차지하므로 줄 수 감소.
-   2페이지~: 전체 사용. */
-const SCREEN_CHARS       = 50;   // 인쇄 기준 한 줄 글자 수 (텍스트 폭 507pt ÷ 10pt)
-const SCREEN_FIRST_LINES = 55;   // 화면 1페이지 줄 수 (실측 보정값)
-const SCREEN_FULL_LINES  = 68;   // 화면 2페이지~ 줄 수 (실측 보정값)
-
-/** 텍스트를 화면 페이지 단위로 분할 */
-function splitIntoPages(text) {
-  const rawLines = (text || '').split('\n');
-  const measured = rawLines.map(ln => ({
-    text: ln,
-    vl: Math.max(1, Math.ceil(ln.length / SCREEN_CHARS)),
-  }));
-
-  const pages = [];
-  let cur = [];
-  let usedVl = 0;
-  let isFirst = true;
-
-  for (const line of measured) {
-    const limit = isFirst ? SCREEN_FIRST_LINES : SCREEN_FULL_LINES;
-    if (usedVl + line.vl > limit && cur.length > 0) {
-      pages.push(cur.join('\n'));
-      cur = [line.text];
-      usedVl = line.vl;
-      isFirst = false;
-    } else {
-      cur.push(line.text);
-      usedVl += line.vl;
-    }
-  }
-  if (cur.length > 0) pages.push(cur.join('\n'));
-  return pages.length ? pages : [''];
-}
-
-/** HTML 특수문자 이스케이프 (개행 유지, <br> 미변환) */
-function escRaw(str) {
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
-}
-
-/** 생성된 협의록 본문을 2쪽에 표시 (다중 페이지는 별도 paper 블록으로 분리) */
+/** 생성된 협의록 본문을 2쪽에 표시 (화면: 단일 연속 스크롤, 페이지 구분선 없음) */
 export function showMinutes(text) {
-  const placeholder   = document.getElementById('minutesPlaceholder');
-  const content       = document.getElementById('minutesContent');
-  const previewScroll = document.querySelector('.preview-scroll');
+  const placeholder = document.getElementById('minutesPlaceholder');
+  const content     = document.getElementById('minutesContent');
   if (!placeholder || !content) return;
 
-  // 이전 렌더링에서 남은 추가 페이지 제거
+  // 이전 렌더링에서 남은 추가 페이지 블록 제거 (방어적 정리)
   document.querySelectorAll('.extra-page').forEach(el => el.remove());
 
   placeholder.hidden = true;
   content.hidden = false;
-
-  const pages = splitIntoPages(text);
-
-  // 1페이지: 기존 minutesContent(#paper 안)에 표시
-  content.textContent = pages[0];
-
-  // 2페이지 이상: .preview-scroll 안에 별도 .paper 블록 추가
-  if (pages.length > 1 && previewScroll) {
-    pages.slice(1).forEach(pageText => {
-      const pageDiv = document.createElement('div');
-      pageDiv.className = 'paper extra-page';
-      const pre = document.createElement('pre');
-      pre.className = 'minutes-content';
-      pre.textContent = pageText;
-      pageDiv.appendChild(pre);
-      previewScroll.appendChild(pageDiv);
-    });
-  }
+  content.textContent = text;  // 전체 내용을 그대로 표시 (페이지 분할 없음)
 }
 
 /** 협의록 본문을 초기 플레이스홀더 상태로 되돌리기 */
