@@ -28,9 +28,9 @@ export function buildPrompt({ text, mode = 'typing', title = '', date = '', agen
   const isPlanning = mode === 'plan';
   const vars = isPlanning ? MODE_VARS.plan : MODE_VARS.meeting;
 
-  // 타자·계획서 기반은 기본적으로 section2(전달사항/안내사항)를 생성하지 않음
-  // 녹음·펜 기반만 section2 포함 (특별 요청 없을 때 기본값)
-  const showSection2 = mode === 'voice' || mode === 'pen';
+  // 모든 모드에서 기본적으로 section2(전달사항/안내사항)를 생성하지 않음
+  // 사용자가 특별히 요청할 때만 포함
+  const showSection2 = false;
 
   const titleLabel = title.trim() || vars.type;
   const dateStr    = formatDate(date || todayIso());
