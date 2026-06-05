@@ -85,10 +85,11 @@ a { color: var(--blue); }
   gap: 4px;
   list-style: none;
   margin: 0;
-  padding: 6px 12px;
+  padding: 5px 12px;
   background: rgba(255,255,255,0.12);
   border-radius: 20px;
   border: 1px solid rgba(255,255,255,0.2);
+  margin-left: 6px;
 }
 .usage-step {
   display: flex;
